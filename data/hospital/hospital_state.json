@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-01-19T09:40:00",
+  "rooms": {
+    "consultation": { "capacity": 1, "occupied": 0 },
+    "salle_1": { "specialite": "cardiologie", "capacity": 5, "occupied": 3 },
+    "salle_2": { "specialite": "pneumologie", "capacity": 10, "occupied": 9 },
+    "salle_3": { "specialite": "neurologie", "capacity": 5, "occupied": 5 },
+    "soins_critiques": { "capacity": 5, "occupied": 4 },
+    "attente": { "capacity": 9999, "occupied": 0 }
+  },
+  "staff": {
+    "medecins_consultation": 1,
+    "infirmiers_triage": 1,
+    "infirmiers_salles": 2,
+    "aides_soignants_transport": 2
+  },
+  "transport_times_min": {
+    "to_unit": 45,
+    "to_consultation": 5
+  },
+  "constraints": {
+    "nurse_max_absence_room_min": 15,
+    "aide_soignant_max_absence_min": 60
+  }
+}

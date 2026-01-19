@@ -1,0 +1,58 @@
+{
+  "type": "object",
+  "required": [
+    "id",
+    "prenom",
+    "nom",
+    "age",
+    "sexe",
+    "heure_arrivee",
+    "localisation",
+    "symptomes_exprimes",
+    "constantes",
+    "statut"
+  ],
+  "properties": {
+    "id": { "type": "string", "description": "Identifiant unique patient (ex: P001)" },
+    "prenom": { "type": "string" },
+    "nom": { "type": "string" },
+    "age": { "type": "integer", "minimum": 0, "maximum": 110 },
+    "sexe": { "type": "string", "enum": ["F", "M", "Autre", "Inconnu"] },
+    "heure_arrivee": { "type": "string", "format": "date-time" },
+    "localisation": {
+      "type": "string",
+      "enum": ["triage", "attente", "consultation", "salle_1", "salle_2", "salle_3", "soins_critiques", "transfert", "sortie"]
+    },
+    "symptomes_exprimes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "type_maladie": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Optionnel: respiratoire/cardio/neurologie/orthopédie/etc."
+    },
+    "constantes": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "fc": { "type": ["integer", "null"], "minimum": 0, "maximum": 250 },
+        "fr": { "type": ["integer", "null"], "minimum": 0, "maximum": 80 },
+        "spo2": { "type": ["integer", "null"], "minimum": 0, "maximum": 100 },
+        "ta_sys": { "type": ["integer", "null"], "minimum": 0, "maximum": 300 },
+        "ta_dia": { "type": ["integer", "null"], "minimum": 0, "maximum": 200 },
+        "temperature": { "type": ["number", "null"], "minimum": 25, "maximum": 45 }
+      }
+    },
+    "notes": { "type": "string" },
+    "examens_en_cours": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "statut": {
+      "type": "string",
+      "enum": ["en_attente", "en_consultation", "en_examens", "hospitalisation", "sortie"]
+    }
+  }
+}

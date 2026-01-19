@@ -1,0 +1,25 @@
+# Core
+python-dotenv==1.0.1
+
+# Agentic / LLM (TD4 & future integration)
+pydantic-ai==0.0.14
+fastmcp==0.4.1
+
+# Formatting & quality (dev)
+black==24.4.2
+pylint==3.1.0
+
+
+# Core agent + MCP
+pydantic>=2.7.0
+fastmcp>=0.4.1
+
+# LLM (Mistral via pydantic-ai)
+mistralai>=0.4.2
+
+
+
+# Utils (safe / standard)
+typing-extensions>=4.9.0
+
+griffe>=0.45.0
