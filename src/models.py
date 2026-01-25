@@ -22,7 +22,7 @@ class PatientStatus(str, Enum):
     HOSPITALIZED = "hospitalized"
     DISCHARGED = "discharged"
 
-# --- 2. LES CONSTANTES (NOUVEAU : C'est ici qu'on stocke les règles) ---
+# --- 2. LES CONSTANTES ---
 
 class TransportTimes(BaseModel):
     to_unit: int
@@ -48,12 +48,16 @@ class Patient(BaseModel):
     location: str
     status: PatientStatus
     arrival_time: int
+    # NOUVEAU : Pour savoir quand il doit sortir de l'unité (Cardio/Ortho...)
+    treatment_end_time: int = 0 
 
 class Staff(BaseModel):
     id: str
     role: StaffRole
     location: str
     is_busy: bool = False
+    # NOUVEAU : Pour savoir à quelle 'sim_time' il sera libéré
+    busy_until: int = 0 
 
 class Room(BaseModel):
     id: str
@@ -86,5 +90,5 @@ class HospitalState(BaseModel):
 
 class StateFile(BaseModel):
     hospital_name: str
-    constants: HospitalConstants  # <--- On ajoute les constantes ici
+    constants: HospitalConstants
     state: HospitalState

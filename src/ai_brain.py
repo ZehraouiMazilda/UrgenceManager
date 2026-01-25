@@ -11,55 +11,54 @@ import re
 from dotenv import load_dotenv
 from mistralai import Mistral
 
-from src.tools import get_hospital_status, get_patient_list, move_patient
+# Import des outils
+from src.tools import get_hospital_dashboard, get_patient_list, transfer_patient_basic, transfer_patient_with_escort
 
-# 1. CHARGEMENT CONFIG
+# 1. CONFIG
 load_dotenv()
 api_key = os.getenv("MISTRAL_API_KEY")
 if not api_key: api_key = "dummy_key"
 
-# 2. CLIENT MISTRAL
-MODEL_NAME = "mistral-tiny"
+# On garde le Large car il est plus logique, on va juste adapter le parser
+MODEL_NAME = "mistral-large-latest" 
 client = Mistral(api_key=api_key)
 
 # =============================================================================
-# 3. PROMPT SYSTEME (VERSION STRICTE)
+# 3. PROMPT SYSTEME
 # =============================================================================
 
 SYSTEM_PROMPT = """
-Tu es le CHEF RÉGULATEUR des urgences.
-TA MISSION : VIDER LA ZONE DE TRIAGE. Si des patients attendent, tu DOIS les placer.
+Tu es le CHEF DE RÉGULATION des urgences.
 
-RÈGLES D'ACTION (IMPORTANT) :
-1. Ne propose qu'UNE SEULE action JSON à la fois. Interdiction de faire des listes.
-2. Si un patient est en Triage et qu'une salle (wr_01, wr_02, etc.) a de la place : DÉPLACE-LE IMMÉDIATEMENT.
-3. Ne dis JAMAIS "attendre" si une salle est vide et qu'un patient attend.
-4. Les ROUGES -> Priorité absolue pour "soins_critiques". Si plein -> Attente Triage.
-5. Les JAUNES/VERTS -> Salles d'attente "wr_01", "wr_02", "wr_03".
+TES OUTILS :
+1. **"transfer_basic"** (Infirmier) : Triage -> Salle d'Attente ou Soins Critiques.
+2. **"transfer_escort"** (Aide-Soignant) : Pour Consultation ou Hospitalisation.
 
-FORMAT DE RÉPONSE OBLIGATOIRE :
-Un seul objet JSON brut. Rien d'autre.
-Exemple : {"action": "move_patient", "patient_id": "PAT_001", "target_room_id": "wr_01"}
+RÈGLES STRICTES :
+1. Si une salle est "[⛔ PLEIN]", tu DOIS choisir une autre salle (wr_01 -> wr_02 -> wr_03).
+2. Triage -> Salle d'Attente = "transfer_basic".
+3. Salle d'Attente -> Consultation = "transfer_escort".
+4. Consultation -> Hôpital/Sortie = "transfer_escort" ou "transfer_basic" (si sortie).
+
+FORMAT DE RÉPONSE ATTENDU (JSON PLAT) :
+{
+  "action": "transfer_basic",
+  "patient_id": "PAT_XXX",
+  "target_room_id": "wr_02"
+}
 """
 
 # =============================================================================
-# 4. FONCTIONS HELPER (REGEX AMÉLIORÉE)
+# 4. HELPERS
 # =============================================================================
 
 def clean_json_response(raw_text):
-    """
-    Nettoie la réponse.
-    Si le LLM envoie plusieurs JSONs à la suite, on ne garde QUE LE PREMIER.
-    """
-    # L'astuce est dans le '?' après le '*' : ça veut dire "Non-Gourmand"
-    # Il s'arrête dès qu'il trouve la première fermeture '}'
     match = re.search(r"\{.*?\}", raw_text, re.DOTALL)
-    if match:
-        return match.group(0)
+    if match: return match.group(0)
     return raw_text
 
 def call_llm_api(context_text):
-    print(f"📡 Envoi au Cerveau ({MODEL_NAME})...")
+    print(f"📡 Analyse du contexte ({MODEL_NAME})...")
     try:
         chat_response = client.chat.complete(
             model=MODEL_NAME,
@@ -67,7 +66,7 @@ def call_llm_api(context_text):
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": context_text},
             ],
-            temperature=0.1, # Encore plus froid pour être rigoureux
+            temperature=0.0,
         )
         return clean_json_response(chat_response.choices[0].message.content)
     except Exception as e:
@@ -75,49 +74,93 @@ def call_llm_api(context_text):
         return '{"action": "wait", "reason": "Erreur API"}'
 
 # =============================================================================
-# 5. BOUCLE D'INTELLIGENCE
+# 5. BOUCLE PRINCIPALE (PARSER INTELLIGENT)
 # =============================================================================
 
 def run_brain_loop():
-    print(f"🧠 Cerveau IA démarré ({MODEL_NAME}). Ctrl+C pour stopper.")
+    print(f"🧠 Cerveau IA démarré. Prêt à réguler les flux.")
     
     while True:
         try:
             # A. OBSERVER
-            state_txt = get_hospital_status()
-            triage_details = get_patient_list("triage")
+            dashboard = get_hospital_dashboard()
+            detail_triage = get_patient_list("triage")
+            detail_wr01 = get_patient_list("wr_01")
+            detail_wr02 = get_patient_list("wr_02")
+            detail_wr03 = get_patient_list("wr_03")
             
-            if "Aucun patient" in triage_details:
-                print("💤 Veille (Triage vide)...")
+            # Veille si tout est vide
+            all_empty = (
+                "Aucun patient" in detail_triage and 
+                "Aucun patient" in detail_wr01 and 
+                "Aucun patient" in detail_wr02 and
+                "Aucun patient" in detail_wr03
+            )
+            
+            if all_empty and "ALARMES EN COURS" not in dashboard:
+                print("💤 Veille (Hôpital Calme)...")
                 time.sleep(5)
                 continue
 
-            full_prompt = f"ÉTAT HÔPITAL :\n{state_txt}\n\nPATIENTS À PLACER (TRIAGE) :\n{triage_details}"
+            full_prompt = (
+                f"{dashboard}\n\n"
+                f"DÉTAILS TRIAGE:\n{detail_triage}\n"
+                f"DÉTAILS SALLE 1:\n{detail_wr01}\n"
+                f"DÉTAILS SALLE 2:\n{detail_wr02}\n"
+                f"DÉTAILS SALLE 3:\n{detail_wr03}"
+            )
 
             # B. RÉFLÉCHIR
             llm_response_str = call_llm_api(full_prompt)
-            print(f"🤖 Pensée brute : {llm_response_str}")
+            print(f"🤖 Pensée : {llm_response_str}")
 
-            # C. AGIR
+            # C. AGIR (PARSER ROBUSTE)
             try:
                 decision = json.loads(llm_response_str)
-                action = decision.get("action")
                 
-                if action == "move_patient":
+                # --- DÉTECTION DU FORMAT (C'est ici la magie) ---
+                raw_action = decision.get("action")
+                
+                real_action_name = "wait"
+                pid = None
+                dest = None
+                
+                # Cas 1 : L'IA fait du zèle (Format Niché : "action": {"method":...})
+                if isinstance(raw_action, dict):
+                    real_action_name = raw_action.get("method") or raw_action.get("type")
+                    pid = raw_action.get("patient_id")
+                    # L'IA utilise parfois "to" ou "target" au lieu de "target_room_id"
+                    dest = raw_action.get("to") or raw_action.get("target") or raw_action.get("target_room_id")
+                    
+                # Cas 2 : L'IA obéit (Format Plat : "action": "transfer...")
+                elif isinstance(raw_action, str):
+                    real_action_name = raw_action
                     pid = decision.get("patient_id")
                     dest = decision.get("target_room_id")
-                    print(f"⚡ ORDRE : Déplacer {pid} vers {dest}")
-                    result = move_patient(pid, dest)
-                    print(f"   ↳ Résultat : {result}")
-                    
-                elif action == "wait":
-                    print(f"⏳ Standby : {decision.get('reason')}")
+
+                # --- EXÉCUTION ---
+                result = "Pas d'action reconnue"
                 
+                if real_action_name == "transfer_basic":
+                    print(f"⚡ ORDRE : Transfert Simple de {pid} vers {dest}")
+                    result = transfer_patient_basic(pid, dest)
+                    
+                elif real_action_name == "transfer_escort":
+                    print(f"⚡ ORDRE : Transfert ESCORTÉ de {pid} vers {dest}")
+                    result = transfer_patient_with_escort(pid, dest)
+                    
+                elif real_action_name == "wait":
+                    reason = decision.get("reason") or "Attente"
+                    print(f"⏳ Standby : {reason}")
+                    result = "Attente."
+                
+                print(f"   ↳ Résultat : {result}")
+
             except json.JSONDecodeError:
-                print(f"❌ Erreur JSON (L'IA a bégayé) : {llm_response_str}")
+                print(f"❌ Erreur JSON : {llm_response_str}")
 
         except Exception as e:
-            print(f"🚨 Crash : {e}")
+            print(f"🚨 Crash Loop : {e}")
 
         print("⏳ ... (5s)")
         time.sleep(5)

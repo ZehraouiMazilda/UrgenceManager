@@ -1,6 +1,6 @@
 import streamlit as st
 import time
-from src.utils import load_initial_state, save_state  # <--- AJOUT CRITIQUE ICI
+from src.utils import load_initial_state, save_state
 import os
 from src.models import Patient, Severity, PatientStatus
 
@@ -63,7 +63,7 @@ def show_simulation():
                     st.rerun()
 
         with c_stop:
-            # RESET COMPLET qui vide aussi la mémoire pour forcer la relecture du JSON
+            # RESET COMPLET
             if st.button("⏹️ Reset", use_container_width=True):
                 st.session_state.sim_running = False
                 st.session_state.sim_time = 0
@@ -99,14 +99,16 @@ def show_simulation():
                     if st.button("Injecter Patient"):
                         # 1. Création en mémoire
                         new_id = f"PAT_{len(state.patients)+1:03d}"
+                        
+                        # Note: Assure-toi que les clés de symptoms.json correspondent 
+                        # aux Enum de models.py (ROUGE, VERT...), sinon adapte ici.
                         new_p = Patient(
                             id=new_id, severity=Severity(gravite), symptom=symptome,
                             location="triage", status=PatientStatus.WAITING, arrival_time=st.session_state.sim_time
                         )
                         state.patients[new_id] = new_p
                         
-                        # 2. SAUVEGARDE SUR DISQUE (POUR LE LLM)
-                        # C'est ici que l'interface parle au JSON
+                        # 2. SAUVEGARDE SUR DISQUE
                         save_state(state, os.path.join(base_dir, "data", "state", "urgence_state.json"))
 
                         st.success(f"Ajouté : {new_id}")
@@ -127,7 +129,7 @@ def show_simulation():
     st.divider()
 
     # =========================================================================
-    # BLOC 04 : LA CARTE DÉTAILLÉE (Connectée au JSON)
+    # BLOC 04 : LA CARTE DÉTAILLÉE
     # =========================================================================
     st.subheader("🗺️ Carte de l'Hôpital")
 
@@ -246,34 +248,59 @@ def show_simulation():
                 st.progress(ratio, text=f"{unit_obj.occupancy}/{unit_obj.capacity}")
 
     # =========================================================================
-    # ⚡ BOUCLE DE JEU (GAME LOOP) - SYNCHRONISATION LIVE
+    # ⚡ BOUCLE DE JEU (GAME LOOP) - SYNCHRONISATION LIVE & PHYSIQUE
     # =========================================================================
     if st.session_state.sim_running:
         # 1. On attend 0.5 seconde
         time.sleep(0.5)
         
-        # 2. AVANCÉE DU TEMPS
+        # 2. AVANCÉE DU TEMPS (+5 minutes par tick)
         st.session_state.sim_time += 5
         
-        # 3. [IMPORTANT] SYNCHRO FICHIER -> MÉMOIRE
-        # On force la relecture du fichier JSON pour voir si l'Agent a modifié quelque chose
+        # 3. SYNCHRO FICHIER & GESTION DU TEMPS (STAFF/PATIENTS)
         try:
             base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             state_path = os.path.join(base_dir, "data", "state", "urgence_state.json")
             
-            # On recharge l'état frais depuis le disque
+            # On recharge l'état
             new_state = load_initial_state(state_path)
-            
-            # On préserve le temps simulé (pour l'interface)
             new_state.time = st.session_state.sim_time
             new_state.is_running = True 
             
-            # On met à jour la mémoire
+            # --- [NOUVEAU] MOTEUR TEMPOREL ---
+            updated = False
+            
+            # A. Libération du STAFF (Médecin / AS)
+            for s_id, agent in new_state.staff.items():
+                if agent.is_busy and agent.busy_until > 0:
+                    if new_state.time >= agent.busy_until:
+                        # Le temps est écoulé, on libère l'agent !
+                        agent.is_busy = False
+                        agent.busy_until = 0
+                        updated = True
+
+            # B. Sortie des PATIENTS (Unités d'hospitalisation)
+            # On vérifie si un patient a fini son traitement (12h-24h)
+            for u_id, unit in new_state.units.items():
+                for pid in list(unit.patients): # Copie de liste pour pouvoir supprimer
+                    pat = new_state.patients.get(pid)
+                    if pat and pat.treatment_end_time > 0:
+                        if new_state.time >= pat.treatment_end_time:
+                            # GUÉRISON ! Le patient sort de l'unité
+                            unit.patients.remove(pid)
+                            unit.occupancy = max(0, unit.occupancy - 1)
+                            del new_state.patients[pid] # On supprime le patient du système
+                            updated = True
+
+            # Si le moteur temporel a fait des modifs, on sauvegarde
+            if updated:
+                save_state(new_state, state_path)
+            
+            # On met à jour la mémoire de l'interface
             st.session_state.hospital_state = new_state
             
         except Exception as e:
-            # Si le LLM est en train d'écrire, on ignore ce tick
-            # print(f"Sync skip: {e}") 
+            # Gestion silencieuse des conflits de lecture/écriture
             pass
         
         # 4. On recharge l'interface
