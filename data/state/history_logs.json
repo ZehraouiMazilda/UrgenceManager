@@ -1,0 +1,39 @@
+[
+  {
+    "session_id": "SESSION_2023_10_27_1400",
+    "logs_patients": [
+      {
+        "timestamp": 10,
+        "id": "PAT_001",
+        "location": "triage",
+        "severity": "JAUNE",
+        "escort_id": null
+      },
+      {
+        "timestamp": 15,
+        "id": "PAT_001",
+        "location": "tran_wr_consult",
+        "severity": "JAUNE",
+        "escort_id": "AS_01" 
+      }
+    ],
+    "logs_staff": [
+      {
+        "timestamp": 15,
+        "id": "AS_01",
+        "location": "tran_wr_consult",
+        "patient_handling_id": "PAT_001",
+        "patient_symptom": "Douleur thoracique",
+        "patient_color": "JAUNE"
+      },
+      {
+        "timestamp": 20,
+        "id": "AS_01",
+        "location": "tran_consult_wr", 
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      }
+    ]
+  }
+]

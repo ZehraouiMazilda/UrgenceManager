@@ -1,0 +1,48 @@
+timestamp;id;location;patient_handling_id;patient_symptom;patient_color
+100;AS_01;tran_consult_wr;;;
+110;AS_01;tran_wr_hos;PAT_001;Douleur abdominale;JAUNE
+155;AS_01;tran_hos_hos;;;
+215;AS_01;tran_wr_consult;PAT_003;Entorse de cheville légère à modérée;VERT
+235;AS_01;tran_consult_wr;;;
+140;AS_01;tran_wr_consult;PAT_002;Gastro-entérite légère;VERT
+155;AS_01;tran_consult_wr;;;
+190;AS_01;tran_wr_consult;PAT_004;Renouvellement d'ordonnance;GRIS
+205;AS_01;tran_consult_wr;;;
+215;AS_01;tran_wr_consult;PAT_007;Renouvellement d'ordonnance;GRIS
+240;AS_01;tran_consult_wr;;;
+240;AS_01;tran_wr_hos;PAT_007;Renouvellement d'ordonnance;GRIS
+240;AS_02;tran_wr_consult;PAT_008;Renouvellement d'ordonnance;GRIS
+265;AS_02;tran_consult_wr;;;
+265;AS_02;tran_wr_hos;PAT_008;Renouvellement d'ordonnance;GRIS
+285;AS_01;tran_unknown;;;
+285;AS_01;tran_wr_consult;PAT_005;Renouvellement d'ordonnance;GRIS
+290;AS_01;tran_consult_wr;;;
+310;AS_02;tran_hos_hos;;;
+310;AS_01;tran_wr_consult;PAT_006;Renouvellement d'ordonnance;GRIS
+315;AS_01;tran_consult_wr;;;
+1090;AS_01;tran_unknown;;;
+1095;AS_01;tran_wr_hos;PAT_005;Entorse de cheville légère à modérée;VERT
+1140;AS_01;tran_hos_hos;;;
+2070;AS_01;tran_unknown;;;
+2070;AS_01;tran_wr_hos;PAT_005;Renouvellement d'ordonnance;GRIS
+2115;AS_01;tran_hos_hos;;;
+2945;AS_01;tran_unknown;;;
+2945;AS_01;tran_wr_hos;PAT_005;Fracture suspectée (bras/jambe);JAUNE
+2990;AS_01;tran_hos_hos;;;
+135;AS_01;unknown;;;
+135;AS_01;tran_wr_hos;PAT_001;Renouvellement d'ordonnance;GRIS
+180;AS_01;tran_hos_hos;;;
+185;AS_01;unknown;;;
+195;AS_01;tran_wr_hos;PAT_002;Renouvellement d'ordonnance;GRIS
+240;AS_01;tran_hos_hos;;;
+450;AS_01;unknown;;;
+450;AS_01;tran_wr_hos;PAT_016;Renouvellement d'ordonnance;GRIS
+450;AS_02;tran_wr_consult;PAT_001;Renouvellement d'ordonnance;GRIS
+460;AS_02;tran_consult_wr;;;
+465;AS_02;tran_wr_hos;PAT_001;Renouvellement d'ordonnance;GRIS
+495;AS_01;tran_hos_hos;;;
+510;AS_02;tran_hos_hos;;;
+510;AS_01;tran_wr_consult;PAT_002;Renouvellement d'ordonnance;GRIS
+525;AS_01;tran_consult_wr;;;
+530;AS_01;tran_wr_hos;PAT_002;Renouvellement d'ordonnance;GRIS
+575;AS_01;tran_hos_hos;;;

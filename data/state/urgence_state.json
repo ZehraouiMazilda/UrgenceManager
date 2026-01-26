@@ -1,5 +1,5 @@
 {
-  "hospital_name": "Hackathon Hospital Center",
+  "hospital_name": "Urgence",
   "constants": {
     "transport_times_min": {
       "to_unit": 45,
@@ -12,17 +12,17 @@
         "wr_03": 5
       },
       "consultation_room": 1,
-      "soins_critiques": 5,
+      "soins_critiques": 1,
       "units": {
-        "ortho": 10,
-        "neuro": 10,
-        "pneumo": 10,
-        "cardio": 10
+        "ortho": 6,
+        "neuro": 9,
+        "pneumo": 12,
+        "cardio": 12
       }
     }
   },
   "state": {
-    "time": 635,
+    "time": 345,
     "is_running": true,
     "triage_zone": {
       "id": "triage",
@@ -31,7 +31,6 @@
       "occupancy": 0,
       "patients": [],
       "staff": [
-        "INF_TRIAGE_01",
         "AS_01",
         "AS_02"
       ]
@@ -41,12 +40,8 @@
         "id": "wr_01",
         "name": "Salle 1",
         "capacity": 5,
-        "occupancy": 5,
-        "patients": [
-          "PAT_002",
-          "PAT_003",
-          "PAT_001"
-        ],
+        "occupancy": 0,
+        "patients": [],
         "staff": [
           "INF_SALLE_01"
         ]
@@ -55,8 +50,11 @@
         "id": "wr_02",
         "name": "Salle 2",
         "capacity": 10,
-        "occupancy": 0,
-        "patients": [],
+        "occupancy": 2,
+        "patients": [
+          "PAT_002",
+          "PAT_005"
+        ],
         "staff": [
           "INF_SALLE_02"
         ]
@@ -65,9 +63,13 @@
         "id": "wr_03",
         "name": "Salle 3",
         "capacity": 5,
-        "occupancy": 0,
-        "patients": [],
-        "staff": []
+        "occupancy": 1,
+        "patients": [
+          "PAT_003"
+        ],
+        "staff": [
+          "INF_TRIAGE_01"
+        ]
       }
     },
     "consultation_room": {
@@ -83,7 +85,7 @@
     "soins_critiques": {
       "id": "soins_critiques",
       "name": "Soins Critiques",
-      "capacity": 5,
+      "capacity": 1,
       "occupancy": 0,
       "patients": [],
       "staff": []
@@ -92,7 +94,7 @@
       "ortho": {
         "id": "ortho",
         "name": "Orthopédie",
-        "capacity": 10,
+        "capacity": 6,
         "occupancy": 0,
         "patients": [],
         "staff": []
@@ -100,7 +102,7 @@
       "neuro": {
         "id": "neuro",
         "name": "Neurologie",
-        "capacity": 10,
+        "capacity": 9,
         "occupancy": 0,
         "patients": [],
         "staff": []
@@ -108,15 +110,18 @@
       "pneumo": {
         "id": "pneumo",
         "name": "Pneumologie",
-        "capacity": 10,
-        "occupancy": 0,
-        "patients": [],
+        "capacity": 12,
+        "occupancy": 2,
+        "patients": [
+          "PAT_001",
+          "PAT_004"
+        ],
         "staff": []
       },
       "cardio": {
         "id": "cardio",
         "name": "Cardiologie",
-        "capacity": 10,
+        "capacity": 12,
         "occupancy": 0,
         "patients": [],
         "staff": []
@@ -127,25 +132,51 @@
         "id": "PAT_001",
         "severity": "GRIS",
         "symptom": "Renouvellement d'ordonnance",
-        "location": "wr_01",
+        "location": "pneumo",
         "status": "waiting",
-        "arrival_time": 25
+        "arrival_time": 160,
+        "treatment_end_time": 1348,
+        "medical_decision": null
       },
       "PAT_002": {
         "id": "PAT_002",
-        "severity": "JAUNE",
-        "symptom": "Fracture suspectée (bras/jambe)",
-        "location": "wr_01",
+        "severity": "GRIS",
+        "symptom": "Renouvellement d'ordonnance",
+        "location": "wr_02",
         "status": "waiting",
-        "arrival_time": 110
+        "arrival_time": 160,
+        "treatment_end_time": 0,
+        "medical_decision": null
       },
       "PAT_003": {
         "id": "PAT_003",
-        "severity": "JAUNE",
-        "symptom": "Fracture suspectée (bras/jambe)",
-        "location": "wr_01",
+        "severity": "GRIS",
+        "symptom": "Renouvellement d'ordonnance",
+        "location": "wr_03",
         "status": "waiting",
-        "arrival_time": 635
+        "arrival_time": 160,
+        "treatment_end_time": 0,
+        "medical_decision": null
+      },
+      "PAT_004": {
+        "id": "PAT_004",
+        "severity": "GRIS",
+        "symptom": "Renouvellement d'ordonnance",
+        "location": "pneumo",
+        "status": "waiting",
+        "arrival_time": 160,
+        "treatment_end_time": 967,
+        "medical_decision": "pneumo"
+      },
+      "PAT_005": {
+        "id": "PAT_005",
+        "severity": "GRIS",
+        "symptom": "Renouvellement d'ordonnance",
+        "location": "wr_02",
+        "status": "waiting",
+        "arrival_time": 160,
+        "treatment_end_time": 0,
+        "medical_decision": null
       }
     },
     "staff": {
@@ -153,37 +184,49 @@
         "id": "DOC_01",
         "role": "medecin_consultation",
         "location": "consultation",
-        "is_busy": false
+        "is_busy": false,
+        "busy_until": 0,
+        "return_transport_code": null
       },
       "INF_TRIAGE_01": {
         "id": "INF_TRIAGE_01",
         "role": "infirmier_triage",
-        "location": "triage",
-        "is_busy": false
+        "location": "wr_03",
+        "is_busy": false,
+        "busy_until": 0,
+        "return_transport_code": null
       },
       "INF_SALLE_01": {
         "id": "INF_SALLE_01",
         "role": "infirmier_salles",
         "location": "wr_01",
-        "is_busy": false
+        "is_busy": false,
+        "busy_until": 0,
+        "return_transport_code": null
       },
       "INF_SALLE_02": {
         "id": "INF_SALLE_02",
         "role": "infirmier_salles",
         "location": "wr_02",
-        "is_busy": false
+        "is_busy": false,
+        "busy_until": 0,
+        "return_transport_code": null
       },
       "AS_01": {
         "id": "AS_01",
         "role": "aide_soignant_transport",
         "location": "triage",
-        "is_busy": false
+        "is_busy": false,
+        "busy_until": 0,
+        "return_transport_code": null
       },
       "AS_02": {
         "id": "AS_02",
         "role": "aide_soignant_transport",
         "location": "triage",
-        "is_busy": false
+        "is_busy": false,
+        "busy_until": 0,
+        "return_transport_code": null
       }
     },
     "transport_consultation_active": false,

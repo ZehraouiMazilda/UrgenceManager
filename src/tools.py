@@ -2,103 +2,101 @@ import os
 import time
 import random
 from src.utils import load_initial_state, save_state
+from src.logger import log_event 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JSON_PATH = os.path.join(BASE_DIR, "data", "state", "urgence_state.json")
 
-def _get_state():
-    return load_initial_state(JSON_PATH)
+def _get_state(): return load_initial_state(JSON_PATH)
+def _save_state(state): save_state(state, JSON_PATH)
 
-def _save_state(state):
-    save_state(state, JSON_PATH)
-
-# --- HELPERS (Fonctions internes) ---
-
+# --- HELPERS ---
 def _check_staff_in_room(room_obj, role_tag):
-    """Vérifie si un staff (INF, AS, DOC) est physiquement dans la salle."""
     if not room_obj.staff: return False
     return any(role_tag in s_id for s_id in room_obj.staff)
 
 def _find_available_as(state):
-    """Cherche un Aide-Soignant (AS) qui n'est PAS occupé."""
     for s_id, agent in state.staff.items():
         if "aide_soignant" in agent.role and not agent.is_busy:
             return agent
     return None
 
 def _get_severity_score(severity_enum):
-    """Convertit l'Enum (ROUGE, VERT...) en chiffre pour les comparaisons."""
-    # On gère le cas où c'est l'objet Enum ou juste la string
     val = getattr(severity_enum, "value", str(severity_enum))
-    mapping = {
-        "ROUGE": 4,
-        "JAUNE": 3,
-        "VERT": 2,
-        "GRIS": 1
-    }
+    mapping = {"ROUGE": 4, "JAUNE": 3, "VERT": 2, "GRIS": 1}
     return mapping.get(val, 1)
 
 # =============================================================================
-# 🔧 TOOL 1 : DEPLACEMENT BASIQUE (Infirmier / Autonome)
+# TOOL 1 : TRANSFERT STAFF (NOUVEAU - Pour gérer les infirmiers)
 # =============================================================================
-
-def transfer_patient_basic(patient_id: str, target_room_id: str):
+def transfer_staff(staff_id: str, target_room_id: str):
     state = _get_state()
     
-    if patient_id not in state.patients: return "❌ Patient introuvable."
+    if staff_id not in state.staff: return f"❌ Staff {staff_id} introuvable."
+    agent = state.staff[staff_id]
+    
+    # Vérifier que c'est un infirmier (les AS et Docs sont gérés autrement)
+    if "infirmier" not in agent.role:
+        return f"⛔ Seuls les infirmiers peuvent être déplacés manuellement ici."
+
+    current_loc_id = agent.location
+    
+    # Mapping des salles
+    all_rooms = {"triage": state.triage_zone, **state.waiting_rooms, "consultation": state.consultation_room}
+    target_room = all_rooms.get(target_room_id)
+    start_room = all_rooms.get(current_loc_id)
+    
+    if not target_room: return f"❌ Salle destination {target_room_id} inconnue."
+    if current_loc_id == target_room_id: return f"⚠️ {staff_id} est déjà en {target_room_id}."
+
+    # Déplacement
+    if start_room and staff_id in start_room.staff:
+        start_room.staff.remove(staff_id)
+    
+    target_room.staff.append(staff_id)
+    agent.location = target_room_id
+    
+    log_event(state, "STAFF", staff_id, f"moved_to_{target_room_id}")
+    _save_state(state)
+    return f"✅ {staff_id} déplacé vers {target_room.name}."
+
+# =============================================================================
+# TOOL 2 : TRANSFERT PATIENT BASIQUE
+# =============================================================================
+def transfer_patient_basic(patient_id: str, target_room_id: str):
+    state = _get_state()
+    if patient_id not in state.patients: return "❌ Patient introuvable (Fantôme)."
     patient = state.patients[patient_id]
     current_loc = patient.location
     
-    all_rooms = {
-        "triage": state.triage_zone, "consultation": state.consultation_room,
-        "soins_critiques": state.soins_critiques, **state.waiting_rooms, **state.units
-    }
-    
+    if current_loc == target_room_id: return f"⚠️ Déjà fait."
+
+    all_rooms = {"triage": state.triage_zone, "consultation": state.consultation_room, "soins_critiques": state.soins_critiques, **state.waiting_rooms, **state.units}
     target_room = all_rooms.get(target_room_id)
     start_room = all_rooms.get(current_loc)
 
-    # --- RÈGLE 1 : Triage nécessite INF ou AS ---
-    if current_loc == "triage":
-        has_inf = _check_staff_in_room(state.triage_zone, "INF")
-        has_as = _check_staff_in_room(state.triage_zone, "AS")
-        if not (has_inf or has_as):
-            return "⛔ ACTION REFUSÉE (Règle 1) : Pas d'Infirmier ou d'AS au Triage."
-
-    # --- RÈGLE 2 : Patient ROUGE -> Soins Critiques ---
-    severity_val = _get_severity_score(patient.severity)
-    is_red = severity_val >= 4 
-
-    if is_red and current_loc == "triage" and target_room_id != "soins_critiques":
-        return "⛔ SÉCURITÉ (Règle 2) : Patient ROUGE doit aller en Soins Critiques !"
-
-    # --- TRAJETS AUTORISÉS ---
-    allowed = False
-    if current_loc == "triage":
-        if target_room_id == "soins_critiques": allowed = True
-        elif target_room_id in state.waiting_rooms: allowed = True
-        
-    elif current_loc == "consultation":
-        if target_room_id == "soins_critiques": allowed = True
-        elif target_room_id == "exit": 
-            # SORTIE DÉFINITIVE
+    # Sortie
+    if target_room_id == "exit":
+        if patient.medical_decision == "exit":
             del state.patients[patient_id]
-            state.consultation_room.occupancy = 0
-            state.consultation_room.patients = []
-            if "DOC_01" in state.staff: 
-                state.staff["DOC_01"].is_busy = False
-                state.staff["DOC_01"].busy_until = 0
+            if start_room:
+                if patient_id in start_room.patients: start_room.patients.remove(patient_id)
+                start_room.occupancy = max(0, start_room.occupancy - 1)
+            if current_loc == "consultation" and "DOC_01" in state.staff: state.staff["DOC_01"].is_busy = False
+            log_event(state, "PATIENT", patient_id, "exit", related_entity=None)
             _save_state(state)
-            return f"✅ Patient {patient_id} est SORTI de l'hôpital (Retour Domicile)."
+            return f"✅ Patient {patient_id} SORTI."
+        else: return "⛔ Sortie non validée par médecin."
 
-    if not allowed:
-        return f"⛔ Trajet interdit pour 'transfer_basic'."
+    # Triage -> Ailleurs
+    if current_loc == "triage":
+        if _get_severity_score(patient.severity) >= 4 and target_room_id != "soins_critiques":
+            return "⛔ ROUGE -> Soins Critiques OBLIGATOIRE !"
 
-    # --- CAPACITÉ ---
     if target_room and int(target_room.occupancy) >= int(target_room.capacity):
-        return f"⛔ Salle {target_room_id} PLEINE ({target_room.occupancy}/{target_room.capacity})."
+        return f"⛔ {target_room_id} PLEINE."
 
-    # --- EXÉCUTION ---
-    if start_room: 
+    if start_room:
         start_room.occupancy = max(0, int(start_room.occupancy) - 1)
         if patient_id in start_room.patients: start_room.patients.remove(patient_id)
     
@@ -106,13 +104,13 @@ def transfer_patient_basic(patient_id: str, target_room_id: str):
     target_room.patients.append(patient_id)
     patient.location = target_room_id
     
+    log_event(state, "PATIENT", patient_id, target_room_id)
     _save_state(state)
-    return f"✅ Succès : {patient_id} déplacé vers {target_room_id}."
+    return f"✅ Succès : {patient_id} vers {target_room_id}."
 
 # =============================================================================
-# 🔧 TOOL 2 : DEPLACEMENT AVEC ESCORTE AS (Gestion Temps & Hasard)
+# TOOL 3 : TRANSFERT ESCORTE
 # =============================================================================
-
 def transfer_patient_with_escort(patient_id: str, target_room_id: str):
     state = _get_state()
     current_time = state.time
@@ -120,70 +118,48 @@ def transfer_patient_with_escort(patient_id: str, target_room_id: str):
     if patient_id not in state.patients: return "❌ Patient introuvable."
     patient = state.patients[patient_id]
     current_loc = patient.location
-    
-    as_agent = _find_available_as(state)
-    if not as_agent:
-        return "⛔ RESSOURCE MANQUANTE : Aucun Aide-Soignant libre."
+    if current_loc == target_room_id: return f"⚠️ Déjà fait."
 
-    all_rooms = {
-        "consultation": state.consultation_room,
-        **state.waiting_rooms, **state.units
-    }
+    as_agent = _find_available_as(state)
+    if not as_agent: return "⛔ Pas d'AS libre."
+
+    all_rooms = {"consultation": state.consultation_room, **state.waiting_rooms, **state.units}
     target_room = all_rooms.get(target_room_id)
     start_room = all_rooms.get(current_loc)
-    
-    if not target_room: return f"❌ Destination {target_room_id} inconnue."
+    if not target_room: return f"❌ Destination inconnue."
 
-    allowed = False
-    duration_transport = 0 
-    duration_task = 0 # Temps d'occupation du médecin ou autre
-    
-    # 1. VERS CONSULTATION
+    transport_code, return_code = "unknown", "unknown"
+    duration, allowed = 0, False
+
+    # 1. WR -> Consult
     if current_loc in state.waiting_rooms and target_room_id == "consultation":
-        allowed = True
-        duration_transport = 5
-        duration_task = 15 # La consultation dure 15 min
-        
-    # 2. VERS SALLE D'ATTENTE (Retour Consult)
-    elif current_loc == "consultation" and target_room_id in state.waiting_rooms:
-        allowed = True
-        duration_transport = 5 
-        # On libère le médecin immédiatement
-        if "DOC_01" in state.staff: 
-            state.staff["DOC_01"].is_busy = False
-            state.staff["DOC_01"].busy_until = 0
+        allowed, duration = True, 5
+        transport_code, return_code = "tran_wr_consult", "tran_consult_wr"
 
-    # 3. VERS UNITÉS (HOSPITALISATION)
+    # 2. WR -> Hôpital
     elif current_loc in state.waiting_rooms and target_room_id in state.units:
-        # Note: Normalement on vient de consult, mais si le LLM fait Consult->Attente->Unité, c'est ok.
-        allowed = True
-        duration_transport = 45
-        # DUREE DE SEJOUR ALEATOIRE (12h - 24h)
-        # 12h = 720 min, 24h = 1440 min
-        stay_duration = random.randint(720, 1440)
-        patient.treatment_end_time = current_time + stay_duration
+        if patient.medical_decision != target_room_id: return "⛔ Erreur ordre médical."
+        allowed, duration = True, 45
+        transport_code, return_code = "tran_wr_hos", "tran_hos_hos"
+        stay = random.randint(180, 2880)
+        patient.treatment_end_time = current_time + stay + duration
 
-    if not allowed:
-        return f"⛔ Trajet interdit pour 'transfer_escort'."
+    if not allowed: return "⛔ Trajet escort interdit."
+    if int(target_room.occupancy) >= int(target_room.capacity): return f"⛔ {target_room_id} PLEINE."
 
-    # --- CAPACITÉ ---
-    if int(target_room.occupancy) >= int(target_room.capacity):
-        return f"⛔ Salle {target_room_id} PLEINE."
+    log_event(state, "PATIENT", patient_id, transport_code, related_entity=as_agent.id)
+    log_event(state, "STAFF", as_agent.id, transport_code, related_entity=patient)
 
-    # --- EXÉCUTION & BLOCAGE TEMPOREL ---
-    
-    # Bloquer AS
-    as_agent.is_busy = True 
-    as_agent.busy_until = current_time + duration_transport
+    as_agent.is_busy = True
+    as_agent.busy_until = current_time + duration
+    as_agent.return_transport_code = return_code
 
-    # Bloquer Médecin (Si consult)
     if target_room_id == "consultation":
-        if state.staff["DOC_01"].is_busy:
-            return "⛔ Le Médecin est déjà OCCUPÉ."
+        if state.staff["DOC_01"].is_busy: return "⛔ Médecin occupé."
+        consult_duration = random.randint(10, 20)
         state.staff["DOC_01"].is_busy = True
-        state.staff["DOC_01"].busy_until = current_time + duration_task
+        state.staff["DOC_01"].busy_until = current_time + duration + consult_duration
 
-    # Mouvement
     if start_room:
         start_room.occupancy = max(0, int(start_room.occupancy) - 1)
         if patient_id in start_room.patients: start_room.patients.remove(patient_id)
@@ -193,83 +169,61 @@ def transfer_patient_with_escort(patient_id: str, target_room_id: str):
     patient.location = target_room_id
     
     _save_state(state)
-    return f"✅ Succès : {patient_id} vers {target_room_id} (AS occupé {duration_transport}min)."
+    return f"✅ Succès : {patient_id} escorté ({transport_code})."
 
 # =============================================================================
-# 🔧 TOOL 3 : DASHBOARD & ALARMES (Avec Aide à la Décision)
+# DASHBOARD
 # =============================================================================
-
 def get_hospital_dashboard():
     state = _get_state()
     alerts = []
     
-    # Alarme Règle 5
+    # 1. Alertes Triage & Priorité
+    triage_pats = []
+    for p_id in state.triage_zone.patients:
+        p = state.patients.get(p_id)
+        if p:
+            triage_pats.append(p)
+            if _get_severity_score(p.severity) >= 4: 
+                alerts.append(f"🚨 URGENCE : {p.id} (ROUGE) -> Soins Critiques.")
+
+    # 2. Alertes Infirmières (Règle 3)
     for rid, room in state.waiting_rooms.items():
-        has_inf = _check_staff_in_room(room, "INF")
-        if int(room.occupancy) > 0 and not has_inf:
-            alerts.append(f"🔥 ALERTE SÉCURITÉ : {room.name} contient des patients mais AUCUNE Infirmière !")
-            
-    # Alarme Règle 3
-    if int(state.waiting_rooms["wr_02"].occupancy) > 0 and int(state.waiting_rooms["wr_01"].occupancy) == 0:
-        alerts.append("⚠️ OPTIMISATION : Remplissez Salle 1 avant Salle 2.")
+        has_patients = int(room.occupancy) > 0
+        has_nurse = _check_staff_in_room(room, "INF")
+        if has_patients and not has_nurse:
+            alerts.append(f"⚠️ MANQUE STAFF : {room.name} a des patients mais PAS d'infirmier ! (Utilise 'transfer_staff')")
 
-    # Alarme Règle 2
-    triage_pats = [p for p in state.patients.values() if p.location == "triage"]
-    for p in triage_pats:
-        score = _get_severity_score(p.severity)
-        if score >= 4:
-            alerts.append(f"🚨 URGENCE VITALE : Patient {p.id} (ROUGE) attend au Triage !")
-
-    # --- AIDE A LA DECISION (POST-CONSULTATION) ---
-    # Si un patient est en consult ET que le médecin n'est PLUS occupé (donc temps écoulé)
-    if state.consultation_room.occupancy > 0:
-        if not state.staff["DOC_01"].is_busy:
-            p_id = state.consultation_room.patients[0]
-            
-            # HASARD : 50% Maison / 50% Hôpital
-            # On utilise le hash de l'ID + le temps pour que la décision soit stable mais pseudo-aléatoire
-            seed = hash(p_id) + state.time
-            random.seed(seed)
-            choice = random.choice(["MAISON", "HOPITAL"])
-            
-            if choice == "MAISON":
-                alerts.append(f"✅ FIN CONSULTATION ({p_id}) : Patient stable -> RECOMMANDATION : SORTIE (Maison).")
-            else:
-                unit = random.choice(["ortho", "cardio", "neuro", "pneumo"])
-                alerts.append(f"⚠️ FIN CONSULTATION ({p_id}) : Cas complexe -> RECOMMANDATION : HOSPITALISATION ({unit}).")
-
-    busy_staff = [s.id for s in state.staff.values() if s.is_busy]
-    
-    report = f"\n=== 📟 DASHBOARD HÔPITAL (H+{state.time // 60}) ===\n"
-    
-    if alerts:
-        report += "\n💥💥 ALARMES / AVIS MÉDICAL 💥💥\n"
-        for a in alerts: report += f"- {a}\n"
-        report += "\n"
-    else:
-        report += "✅ Aucune alerte active.\n"
-        
-    report += f"🚑 STAFF OCCUPÉ : {', '.join(busy_staff) if busy_staff else 'Aucun'}\n"
-    report += f"📍 Triage : {len(triage_pats)} patients.\n"
-    
+    # 3. Alertes Médicales
     for rid, room in state.waiting_rooms.items():
-        staff_icon = "✅INF" if _check_staff_in_room(room, "INF") else "❌VIDE"
-        report += f"📍 {room.name} ({rid}) [{staff_icon}] : {room.occupancy}/{room.capacity}\n"
-        
-    report += f"📍 Consultation : {state.consultation_room.occupancy}/1\n"
+        for pid in room.patients:
+            pat = state.patients.get(pid)
+            if pat and pat.medical_decision and pat.medical_decision in state.units:
+                alerts.append(f"🛏️ HOSPITALISATION : {pid} -> '{pat.medical_decision}' (Via AS).")
+
+    # 4. Sortie Consult
+    cons = state.consultation_room
+    if cons.occupancy > 0 and cons.patients:
+        pid = cons.patients[0]
+        pat = state.patients.get(pid)
+        if pat:
+            if pat.medical_decision == "exit": alerts.append(f"🏠 SORTIE : {pid} -> Exit.")
+            elif pat.medical_decision == "soins_critiques": alerts.append(f"🚨 TRANSFERT SC : {pid} -> Soins Critiques.")
+
+    # STAFF LOCATIONS (Pour aider le LLM)
+    inf_locs = [f"{s.id}@{s.location}" for s in state.staff.values() if "infirmier" in s.role]
+
+    report = f"\n=== DASHBOARD (H+{state.time // 60}) ===\n"
+    if alerts: report += "\n💥 ACTIONS 💥\n" + "\n".join([f"- {a}" for a in alerts]) + "\n"
+    
+    report += f"\nINFIRMIERS : {', '.join(inf_locs)}"
     
     return report
 
-def get_patient_list(location="triage"):
+def get_patient_list(loc):
     state = _get_state()
-    patients = [p for p in state.patients.values() if p.location == location]
-    if not patients: return f"Aucun patient en '{location}'."
-    
-    txt = ""
-    for p in patients:
-        val = _get_severity_score(p.severity)
-        severity_icon = "🔴" if val >= 4 else "🟢" if val <= 2 else "🟡"
-        # On affiche le nom de l'Enum (ex: ROUGE)
-        severity_str = getattr(p.severity, "value", str(p.severity))
-        txt += f"- ID: {p.id} | {severity_icon} {severity_str} | Symp: {p.symptom}\n"
-    return txt
+    pats = [p for p in state.patients.values() if p.location == loc]
+    if not pats: return "Aucun."
+    # Tri par gravité pour aider le LLM à respecter la priorité
+    pats.sort(key=lambda x: _get_severity_score(x.severity), reverse=True)
+    return "\n".join([f"- {p.id} ({p.severity.value}) {f'-> {p.medical_decision}' if p.medical_decision else ''}" for p in pats])

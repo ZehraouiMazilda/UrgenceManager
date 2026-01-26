@@ -22,8 +22,7 @@ class PatientStatus(str, Enum):
     HOSPITALIZED = "hospitalized"
     DISCHARGED = "discharged"
 
-# --- 2. LES CONSTANTES ---
-
+# --- 2. CONSTANTES ---
 class TransportTimes(BaseModel):
     to_unit: int
     to_consultation: int
@@ -35,12 +34,10 @@ class RoomCapacities(BaseModel):
     units: Dict[str, int]
 
 class HospitalConstants(BaseModel):
-    """Les règles du jeu chargées depuis le JSON"""
     transport_times_min: TransportTimes
     capacities_max: RoomCapacities
 
-# --- 3. LES ACTEURS ---
-
+# --- 3. ACTEURS ---
 class Patient(BaseModel):
     id: str
     severity: Severity
@@ -48,16 +45,17 @@ class Patient(BaseModel):
     location: str
     status: PatientStatus
     arrival_time: int
-    # NOUVEAU : Pour savoir quand il doit sortir de l'unité (Cardio/Ortho...)
-    treatment_end_time: int = 0 
+    treatment_end_time: int = 0
+    medical_decision: Optional[str] = None 
 
 class Staff(BaseModel):
     id: str
     role: StaffRole
     location: str
     is_busy: bool = False
-    # NOUVEAU : Pour savoir à quelle 'sim_time' il sera libéré
-    busy_until: int = 0 
+    busy_until: int = 0
+    # NOUVEAU : Pour se souvenir du code de retour (ex: tran_consult_wr)
+    return_transport_code: Optional[str] = None 
 
 class Room(BaseModel):
     id: str
@@ -67,24 +65,38 @@ class Room(BaseModel):
     patients: List[str] = []
     staff: List[str] = []
 
-# --- 4. L'ÉTAT GLOBAL ---
+# --- 4. LOGGING ---
+class PatientLog(BaseModel):
+    timestamp: int
+    id: str
+    location: str          # Code transport ou salle
+    severity: str
+    escort_id: Optional[str] = None
 
+class StaffLog(BaseModel):
+    timestamp: int
+    id: str
+    location: str          # Code transport
+    patient_handling_id: Optional[str] = None
+    patient_symptom: Optional[str] = None
+    patient_color: Optional[str] = None
+
+class SimulationSession(BaseModel):
+    session_id: str
+    logs_patients: List[PatientLog] = []
+    logs_staff: List[StaffLog] = []
+
+# --- 5. ÉTAT GLOBAL ---
 class HospitalState(BaseModel):
     time: int = 0
     is_running: bool = False
-    
-    # Lieux
     triage_zone: Room
     waiting_rooms: Dict[str, Room]
     consultation_room: Room
     soins_critiques: Room
     units: Dict[str, Room]
-    
-    # Acteurs
     patients: Dict[str, Patient] = {}
     staff: Dict[str, Staff] = {}
-    
-    # Transport flags
     transport_consultation_active: bool = False
     transport_hospital_active: bool = False
 
