@@ -14,7 +14,6 @@ from src.ai_brain import process_brain_cycle
 # --- HELPERS ---
 def verify_rules(state):
     violations = []
-    
     # Règle 1: Rouge -> SC
     for p in state.patients.values():
         score = 0
@@ -27,7 +26,12 @@ def verify_rules(state):
     
     for rid, room in state.waiting_rooms.items():
         has_pats = int(room.occupancy) > 0
-        has_nurse = any("infirmier" in state.staff[sid].role for sid in room.staff)
+        # Check présence INFIRMIER present
+        has_nurse = False
+        for sid in room.staff:
+            ag = state.staff.get(sid)
+            if ag and "infirmier" in str(ag.role) and ag.is_present:
+                has_nurse = True
         
         if has_pats and not has_nurse:
             if rid not in st.session_state.nurse_timers:
@@ -39,13 +43,16 @@ def verify_rules(state):
         else:
             if rid in st.session_state.nurse_timers:
                 del st.session_state.nurse_timers[rid]
-
     return violations
 
 def save_session_csv(base_dir):
+    """Sauvegarde avec Timestamp."""
     log_path = os.path.join(base_dir, "data", "history_logs.json")
     hist_dir = os.path.join(base_dir, "data", "historique")
     os.makedirs(hist_dir, exist_ok=True)
+    
+    ts_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
     try:
         if os.path.exists(log_path):
             with open(log_path, "r", encoding='utf-8') as f: history = json.load(f)
@@ -53,22 +60,36 @@ def save_session_csv(base_dir):
                 last_session = history[-1]
                 sess_id = last_session.get("session_id", "unknown")
                 if last_session.get("logs_patients"):
-                    pd.DataFrame(last_session["logs_patients"]).to_csv(os.path.join(hist_dir, f"{sess_id}_patients.csv"), index=False, sep=";")
+                    pd.DataFrame(last_session["logs_patients"]).to_csv(os.path.join(hist_dir, f"{sess_id}_{ts_str}_patients.csv"), index=False, sep=";")
                 if last_session.get("logs_staff"):
-                    pd.DataFrame(last_session["logs_staff"]).to_csv(os.path.join(hist_dir, f"{sess_id}_staff.csv"), index=False, sep=";")
+                    pd.DataFrame(last_session["logs_staff"]).to_csv(os.path.join(hist_dir, f"{sess_id}_{ts_str}_staff.csv"), index=False, sep=";")
                 return True
     except Exception: return False
     return False
 
 def check_presence(state, room_staff_list, role_tag):
-    staff_id = next((s_id for s_id in room_staff_list if role_tag in s_id), None)
-    if not staff_id: return "❌ Absent"
-    return f"🟢 {staff_id}"
+    """Affiche TOUS les membres du staff présents correspondant au rôle."""
+    found_staff = []
+    for s_id in room_staff_list:
+        agent = state.staff.get(s_id)
+        if agent and role_tag in s_id and agent.is_present:
+            found_staff.append(s_id)
+    
+    if not found_staff: return "❌ Absent"
+    return f"🟢 {', '.join(found_staff)}"
 
 def load_full_file(path):
     with open(path, "r", encoding="utf-8") as f: data = json.load(f)
     return StateFile(**data)
 
+def format_patient_colored(patient):
+    if not patient: return "Inconnu"
+    val = patient.severity.value if hasattr(patient.severity, 'value') else str(patient.severity)
+    color_map = {"ROUGE": "red", "JAUNE": "orange", "VERT": "green", "GRIS": "grey"}
+    color = color_map.get(val, "black")
+    return f":{color}[{patient.id}]"
+
+# --- MAIN ---
 def show_simulation():
     if "sim_running" not in st.session_state: st.session_state.sim_running = False
     if "sim_time" not in st.session_state: st.session_state.sim_time = 0
@@ -76,6 +97,7 @@ def show_simulation():
     
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     state_path = os.path.join(base_dir, "data", "state", "urgence_state.json")
+    initial_path = os.path.join(base_dir, "data", "state", "urgence_initial_state.json")
 
     if "hospital_state" not in st.session_state:
         try: st.session_state.hospital_state = load_initial_state(state_path)
@@ -84,7 +106,40 @@ def show_simulation():
 
     # 1. CONFIG
     st.markdown("## 🎮 Simulateur Live (God Mode)")
-    with st.expander("⚙️ Configuration Capacités", expanded=not st.session_state.sim_running):
+    
+    # GESTION PERSONNEL
+    with st.expander("👥 Gestion du Personnel (Présence/Absence)", expanded=True):
+        cols_staff = st.columns(3)
+        updated_staff = False
+        
+        with cols_staff[0]:
+            st.markdown("##### 🩺 Médecin")
+            doc = state.staff.get("DOC_01")
+            if doc:
+                is_p = st.toggle("DOC_01", value=doc.is_present, key="t_doc")
+                if is_p != doc.is_present: doc.is_present = is_p; updated_staff = True
+        
+        with cols_staff[1]:
+            st.markdown("##### 💉 Infirmiers")
+            for sid in ["INF_TRIAGE_01", "INF_SALLE_01", "INF_SALLE_02"]:
+                ag = state.staff.get(sid)
+                if ag:
+                    is_p = st.toggle(sid, value=ag.is_present, key=f"t_{sid}")
+                    if is_p != ag.is_present: ag.is_present = is_p; updated_staff = True
+        
+        with cols_staff[2]:
+            st.markdown("##### 🚑 Aides-Soignants")
+            for sid in ["AS_01", "AS_02"]:
+                ag = state.staff.get(sid)
+                if ag:
+                    is_p = st.toggle(sid, value=ag.is_present, key=f"t_{sid}")
+                    if is_p != ag.is_present: ag.is_present = is_p; updated_staff = True
+        
+        if updated_staff:
+            save_state(state, state_path); st.rerun()
+
+    # CONFIG CAPACITÉS
+    with st.expander("⚙️ Configuration Capacités", expanded=False):
         disable_config = st.session_state.sim_running
         full_file = load_full_file(state_path)
         c1, c2 = st.columns(2)
@@ -127,17 +182,15 @@ def show_simulation():
                 st.session_state.brain_logs = []
                 st.session_state.nurse_timers = {} 
                 
-                full = load_full_file(state_path)
-                full.state.time = 0
-                full.state.patients = {}
-                for r in [full.state.triage_zone, full.state.consultation_room, full.state.soins_critiques] + list(full.state.waiting_rooms.values()) + list(full.state.units.values()):
-                    r.occupancy = 0; r.patients = []
-                for s in full.state.staff.values(): s.is_busy = False; s.busy_until = 0; s.return_transport_code = None
-                
-                try: jd = full.model_dump()
-                except: jd = full.dict()
-                with open(state_path, "w", encoding="utf-8") as f: json.dump(jd, f, indent=2)
-                st.session_state.hospital_state = full.state; st.rerun()
+                if os.path.exists(initial_path):
+                    with open(initial_path, "r", encoding="utf-8") as f: master_data = json.load(f)
+                    with open(state_path, "w", encoding="utf-8") as f: json.dump(master_data, f, indent=2)
+                    st.session_state.hospital_state = load_initial_state(state_path)
+                    st.success("🔄 Réinitialisation complète !")
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    st.error("❌ Fichier 'urgence_initial_state.json' introuvable !")
 
     with col_timer:
         hours = st.session_state.sim_time // 60
@@ -172,16 +225,19 @@ def show_simulation():
                                 wr.patients.append(nid); wr.occupancy += 1
                         save_state(state, state_path); st.success(f"Ajouté {qty} en {target}"); time.sleep(0.5); st.rerun()
 
-    nb_med = len([s for s in state.staff.values() if "medecin" in s.role])
-    nb_inf = len([s for s in state.staff.values() if "infirmier" in s.role])
-    nb_as = len([s for s in state.staff.values() if "aide" in s.role])
+    # COMPTEURS DYNAMIQUES
+    # Correction : Utilisation de .value pour être sûr de matcher la string
+    nb_med = len([s for s in state.staff.values() if "medecin" in str(s.role.value) and s.is_present])
+    nb_inf = len([s for s in state.staff.values() if "infirmier" in str(s.role.value) and s.is_present])
+    nb_as = len([s for s in state.staff.values() if "aide" in str(s.role.value) and s.is_present])
+    
     with c_doc: st.info(f"**Médecins : {nb_med}**")
     with c_inf: st.info(f"**Infirmiers : {nb_inf}**")
     with c_aid: st.info(f"**Aides-Soignants : {nb_as}**")
 
     # 4. LOGS
     st.divider()
-    st.markdown("### 🧠 Cerveau IA (Journal de Bord)")
+    st.markdown("### 🧠 Cerveau IA")
     with st.container(height=300):
         if not st.session_state.brain_logs: st.caption("En attente...")
         else:
@@ -195,15 +251,21 @@ def show_simulation():
         with st.container(border=True):
             st.markdown("#### ❤️ Soins Critiques")
             st.write(f"**{state.soins_critiques.occupancy}/{state.soins_critiques.capacity}**")
-            st.error("🔴 ROUGE ONLY")
+            pats = [format_patient_colored(state.patients.get(pid)) for pid in state.soins_critiques.patients]
+            st.write(" ".join(pats))
+            
     with c_cons:
         with st.container(border=True):
             st.markdown("#### 👨‍⚕️ Consultation")
             st.write(f"**Doc :** {check_presence(state, state.consultation_room.staff, 'DOC')}")
-            st.write(f"**Patient :** {state.consultation_room.patients[0] if state.consultation_room.patients else '_'}")
+            pid = state.consultation_room.patients[0] if state.consultation_room.patients else None
+            st.write(f"**Patient :** {format_patient_colored(state.patients.get(pid)) if pid else '_'}")
 
     as1 = state.staff.get("AS_01")
-    st.info(f"⬇️ Transport Consult : **{'🚑 OUI ('+as1.id+')' if as1 and as1.is_busy else '⛔ NON'}**")
+    if as1 and as1.is_busy: as1_status = f"🚑 OUI ({as1.id})"
+    elif as1 and not as1.is_present: as1_status = "⚫ ABSENT"
+    else: as1_status = "⛔ NON"
+    st.info(f"⬇️ Transport Consult : **{as1_status}**")
 
     c_tri, c_salles = st.columns([1, 3])
     with c_tri:
@@ -211,18 +273,47 @@ def show_simulation():
             st.markdown("#### 📋 Triage")
             st.write(f"**INF:** {check_presence(state, state.triage_zone.staff, 'INF')}")
             st.write(f"**AS:** {check_presence(state, state.triage_zone.staff, 'AS')}")
-            st.write(f"**P:** {len([p for p in state.patients.values() if p.location == 'triage'])}")
+            # AFFICHAGE LISTE PATIENTS TRIAGE
+            pats_tri = [format_patient_colored(state.patients.get(pid)) for pid in state.triage_zone.patients]
+            st.write(f"**P:** {len(pats_tri)}")
+            st.write(", ".join(pats_tri))
 
     with c_salles:
         st.markdown("#### 🛋️ Attente")
         c1, c2, c3 = st.columns([1, 1.5, 1])
         w1, w2, w3 = state.waiting_rooms["wr_01"], state.waiting_rooms["wr_02"], state.waiting_rooms["wr_03"]
-        with c1: st.container(border=True).write(f"**{w1.name}**\n\nStaff: {check_presence(state, w1.staff, 'INF')}\n\nPat: {w1.occupancy}/{w1.capacity}")
-        with c2: st.container(border=True).write(f"**{w2.name}**\n\nStaff: {check_presence(state, w2.staff, 'INF')}\n\nPat: {w2.occupancy}/{w2.capacity}")
-        with c3: st.container(border=True).write(f"**{w3.name}**\n\nStaff: {check_presence(state, w3.staff, 'INF')}\n\nPat: {w3.occupancy}/{w3.capacity}")
+        
+        # AFFICHAGE LISTE PATIENTS SALLES
+        with c1: 
+            with st.container(border=True):
+                st.write(f"**{w1.name}**")
+                st.write(f"INF: {check_presence(state, w1.staff, 'INF')}")
+                st.write(f"AS: {check_presence(state, w1.staff, 'AS')}")
+                st.write(f"Pat: {w1.occupancy}/{w1.capacity}")
+                pats = [format_patient_colored(state.patients.get(pid)) for pid in w1.patients]
+                st.write(" ".join(pats))
+        with c2: 
+            with st.container(border=True):
+                st.write(f"**{w2.name}**")
+                st.write(f"INF: {check_presence(state, w2.staff, 'INF')}")
+                st.write(f"AS: {check_presence(state, w2.staff, 'AS')}")
+                st.write(f"Pat: {w2.occupancy}/{w2.capacity}")
+                pats = [format_patient_colored(state.patients.get(pid)) for pid in w2.patients]
+                st.write(" ".join(pats))
+        with c3: 
+            with st.container(border=True):
+                st.write(f"**{w3.name}**")
+                st.write(f"INF: {check_presence(state, w3.staff, 'INF')}")
+                st.write(f"AS: {check_presence(state, w3.staff, 'AS')}")
+                st.write(f"Pat: {w3.occupancy}/{w3.capacity}")
+                pats = [format_patient_colored(state.patients.get(pid)) for pid in w3.patients]
+                st.write(" ".join(pats))
 
     as2 = state.staff.get("AS_02")
-    st.info(f"⬇️ Transport Hôpital : **{'🚑 OUI ('+as2.id+')' if as2 and as2.is_busy else '⛔ NON'}**")
+    if as2 and as2.is_busy: as2_status = f"🚑 OUI ({as2.id})"
+    elif as2 and not as2.is_present: as2_status = "⚫ ABSENT"
+    else: as2_status = "⛔ NON"
+    st.info(f"⬇️ Transport Hôpital : **{as2_status}**")
 
     st.markdown("#### 🏥 Hospitalisation")
     u1, u2, u3, u4 = st.columns(4)
@@ -284,7 +375,7 @@ def show_simulation():
                             log_event(new_state, "PATIENT", pid, "return_to_wr_for_hos")
 
             for s_id, agent in new_state.staff.items():
-                if "aide" in agent.role and agent.is_busy and agent.busy_until > 0 and new_state.time >= agent.busy_until:
+                if "aide" in str(agent.role) and agent.is_busy and agent.busy_until > 0 and new_state.time >= agent.busy_until:
                     code = agent.return_transport_code if agent.return_transport_code else "unknown"
                     log_event(new_state, "STAFF", agent.id, code)
                     agent.is_busy=False; agent.busy_until=0; agent.return_transport_code=None; updated=True

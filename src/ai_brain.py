@@ -4,7 +4,7 @@ import json
 import re
 from dotenv import load_dotenv
 from mistralai import Mistral
-from src.tools import get_hospital_dashboard, get_patient_list, transfer_patient_basic, transfer_patient_with_escort, transfer_staff
+from src.tools import get_hospital_dashboard, get_patient_list, transfer_patient_basic, transfer_patient_with_escort, transfer_staff, get_staff_directory, get_as_directory
 
 load_dotenv()
 api_key = os.getenv("MISTRAL_API_KEY")
@@ -14,34 +14,63 @@ MODEL_NAME = "mistral-large-latest"
 client = Mistral(api_key=api_key)
 
 SYSTEM_PROMPT = """
-Tu es le CHEF DE RÉGULATION des urgences.
+Tu es le CHEF DE RÉGULATION des urgences. Tu dois agir vite et traiter PLUSIEURS patients à la fois.
 
 TES OUTILS :
-1. **"transfer_basic"** (Pour Patient) : Triage -> Salle d'Attente / Soins Critiques / Sortie.
-2. **"transfer_escort"** (Pour Patient + AS) : Salle d'Attente -> Consultation -> Hospitalisation.
-3. **"transfer_staff"** (Pour Infirmier) : Déplace un infirmier d'une salle à l'autre.
+1. "transfer_basic" : Triage -> Salle d'Attente / Soins Critiques / Sortie.
+2. "transfer_escort" : Salle d'Attente -> Consultation -> Hospitalisation. (Nécessite AS dispo !)
+3. "transfer_staff" : Déplace un INFIRMIER pour la sécurité.
 
-🚨 RÈGLES DE DÉCISION (PRIORITÉ ABSOLUE) 🚨
+🚨 RÈGLES DE PRIORITÉ (ORDRE D'EXÉCUTION) 🚨
 
-1. **URGENCE VITALE (ROUGE)** : Tout patient ROUGE au triage doit aller en Soins Critiques IMMÉDIATEMENT.
-2. **SÉCURITÉ SALLES (Règle 3)** : Si une salle d'attente a des patients mais PAS d'infirmier, envoie un infirmier disponible (depuis une salle vide ou le triage s'il y a du monde).
-3. **PRIORITÉ MÉDICALE** : Traite TOUJOURS les patients JAUNES avant les VERTS/GRIS.
-4. **FLUX** : Vide le triage dès que possible.
+1. **URGENCES VITALES (ROUGE & DÉPASSEMENTS)**
+   - Priorité absolue. Destination : Consultation (si libre) ou Soins Critiques.
 
-FORMAT DE RÉPONSE OBLIGATOIRE (JSON) :
+2. **ALIMENTATION CONSULTATION (GOULOT)**
+   - Si Consult "🟢 LIBRE" + AS dispo : Envoie IMMÉDIATEMENT un patient via "transfer_escort".
+
+3. **FLUX DE MASSE**
+   - Vide le Triage. Remplis wr_01 -> wr_02 -> wr_03.
+
+4. **SÉCURITÉ**
+   - Si une salle a des patients, assure-toi qu'il y a un infirmier.
+
+FORMAT DE RÉPONSE OBLIGATOIRE (STRICT JSON ONLY, NO MARKDOWN, NO TEXT) :
 {
-  "action": "transfer_basic" | "transfer_escort" | "transfer_staff" | "wait",
-  "patient_id": "PAT_XXX" (ou null si staff),
-  "staff_id": "INF_XXX" (seulement si transfer_staff),
-  "target_room_id": "wr_01",
-  "justification": "Courte phrase expliquant pourquoi (ex: 'Patient Rouge prioritaire', 'Salle 1 sans surveillance')"
+  "actions": [
+    {
+      "type": "transfer_basic",
+      "patient_id": "PAT_001",
+      "target_room_id": "wr_01",
+      "justification": "Patient Vert vers salle 1"
+    },
+    {
+      "type": "transfer_escort",
+      "patient_id": "PAT_005",
+      "target_room_id": "consultation",
+      "justification": "Consult libre"
+    }
+  ]
 }
+Si rien à faire : { "actions": [] }
 """
 
 def clean_json_response(raw_text):
-    match = re.search(r"\{.*?\}", raw_text, re.DOTALL)
-    if match: return match.group(0)
-    return raw_text
+    """Nettoie brutalement la réponse pour ne garder que le bloc JSON { ... }"""
+    try:
+        # Enlever les balises markdown code
+        text = raw_text.replace("```json", "").replace("```", "").strip()
+        
+        # Trouver la première accolade ouvrante et la dernière fermante
+        start_idx = text.find('{')
+        end_idx = text.rfind('}')
+        
+        if start_idx != -1 and end_idx != -1:
+            return text[start_idx : end_idx + 1]
+        
+        return text
+    except Exception:
+        return raw_text
 
 def call_llm_api(context_text):
     try:
@@ -52,43 +81,88 @@ def call_llm_api(context_text):
         )
         return clean_json_response(chat_response.choices[0].message.content)
     except Exception as e:
-        return json.dumps({"action": "wait", "justification": f"Erreur API: {e}"})
+        # En cas d'erreur API, on renvoie un JSON vide valide
+        print(f"🚨 ERREUR API MISTRAL : {e}")
+        return json.dumps({"actions": []})
 
 def process_brain_cycle():
     try:
+        # 1. Récupération du contexte
         dashboard = get_hospital_dashboard()
         detail_triage = get_patient_list("triage")
         detail_wr01 = get_patient_list("wr_01")
         detail_wr02 = get_patient_list("wr_02")
+        detail_wr03 = get_patient_list("wr_03")
         
-        # Veille si calme plat
-        if "Aucun" in detail_triage and "ACTIONS" not in dashboard:
-             if ("Aucun" in detail_wr01) and ("Aucun" in detail_wr02):
-                 return None # Pas de log si rien à faire
+        staff_list = get_staff_directory()
+        as_list = get_as_directory()
+        
+        full_prompt = f"""{dashboard}
+        
+INFIRMIERS:
+{staff_list}
 
-        full_prompt = f"{dashboard}\n\nPATIENTS TRIAGE:\n{detail_triage}\n\nPATIENTS SALLE 1:\n{detail_wr01}\n\nPATIENTS SALLE 2:\n{detail_wr02}"
+AIDES-SOIGNANTS:
+{as_list}
 
+TRIAGE:
+{detail_triage}
+
+SALLE 1:
+{detail_wr01}
+
+SALLE 2:
+{detail_wr02}
+
+SALLE 3:
+{detail_wr03}
+"""
+
+        # 2. Appel IA
         llm_response_str = call_llm_api(full_prompt)
+        
+        # DEBUG : Affiche ce que le LLM envoie vraiment dans ta console
+        print(f"\n🧠 [DEBUG LLM RAW]: {llm_response_str}\n")
         
         try:
             decision = json.loads(llm_response_str)
-            action_type = decision.get("action")
-            pid = decision.get("patient_id")
-            sid = decision.get("staff_id")
-            dest = decision.get("target_room_id")
-            justif = decision.get("justification", "Pas de justification")
-
-            res = "Erreur"
-            if action_type == "transfer_basic": res = transfer_patient_basic(pid, dest)
-            elif action_type == "transfer_escort": res = transfer_patient_with_escort(pid, dest)
-            elif action_type == "transfer_staff": res = transfer_staff(sid, dest)
-            elif action_type == "wait": return None # On ne loggue pas les attentes silencieuses
-            else: return f"⚠️ Action inconnue : {action_type}"
+            actions_list = decision.get("actions", [])
             
-            return f"🤖 **{justif}**\n👉 {res}"
+            if not actions_list:
+                return None 
 
-        except json.JSONDecodeError:
-            return f"❌ Erreur JSON LLM"
+            # 3. Exécution de la liste
+            logs_output = []
+            
+            for act in actions_list:
+                action_type = act.get("type")
+                pid = act.get("patient_id")
+                sid = act.get("staff_id")
+                dest = act.get("target_room_id")
+                justif = act.get("justification", "Auto")
+
+                res = "Erreur"
+                
+                if action_type == "transfer_basic":
+                    res = transfer_patient_basic(pid, dest)
+                elif action_type == "transfer_escort":
+                    res = transfer_patient_with_escort(pid, dest)
+                elif action_type == "transfer_staff":
+                    res = transfer_staff(sid, dest)
+                elif action_type == "wait":
+                    continue 
+                else:
+                    res = f"⚠️ Type inconnu : {action_type}"
+                
+                if "⚠️ Déjà" not in res:
+                    logs_output.append(f"👉 {justif} : {res}")
+
+            if not logs_output: return None
+            return "\n".join(logs_output)
+
+        except json.JSONDecodeError as e:
+            # On affiche l'erreur exacte pour débugger
+            return f"❌ Erreur JSON : {e}. Voir console pour le RAW."
 
     except Exception as e:
         return f"🚨 Erreur Cerveau : {e}"

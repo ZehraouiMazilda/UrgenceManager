@@ -22,8 +22,8 @@
     }
   },
   "state": {
-    "time": 55,
-    "is_running": true,
+    "time": 0,
+    "is_running": false,
     "triage_zone": {
       "id": "triage",
       "name": "Zone Triage",
@@ -39,11 +39,8 @@
         "id": "wr_01",
         "name": "Salle 1",
         "capacity": 5,
-        "occupancy": 2,
-        "patients": [
-          "PAT_001",
-          "PAT_003"
-        ],
+        "occupancy": 0,
+        "patients": [],
         "staff": [
           "INF_SALLE_01"
         ]
@@ -52,10 +49,8 @@
         "id": "wr_02",
         "name": "Salle 2",
         "capacity": 10,
-        "occupancy": 1,
-        "patients": [
-          "PAT_002"
-        ],
+        "occupancy": 0,
+        "patients": [],
         "staff": [
           "INF_SALLE_02"
         ]
@@ -64,10 +59,8 @@
         "id": "wr_03",
         "name": "Salle 3",
         "capacity": 5,
-        "occupancy": 1,
-        "patients": [
-          "PAT_004"
-        ],
+        "occupancy": 0,
+        "patients": [],
         "staff": [
           "AS_01",
           "AS_02"
@@ -126,86 +119,55 @@
         "staff": []
       }
     },
-    "patients": {
-      "PAT_001": {
-        "id": "PAT_001",
-        "severity": "GRIS",
-        "symptom": "Renouvellement d'ordonnance",
-        "location": "wr_01",
-        "status": "waiting",
-        "arrival_time": 60,
-        "treatment_end_time": 0
-      },
-      "PAT_002": {
-        "id": "PAT_002",
-        "severity": "GRIS",
-        "symptom": "Renouvellement d'ordonnance",
-        "location": "wr_02",
-        "status": "waiting",
-        "arrival_time": 60,
-        "treatment_end_time": 0
-      },
-      "PAT_003": {
-        "id": "PAT_003",
-        "severity": "GRIS",
-        "symptom": "Renouvellement d'ordonnance",
-        "location": "wr_01",
-        "status": "waiting",
-        "arrival_time": 60,
-        "treatment_end_time": 0
-      },
-      "PAT_004": {
-        "id": "PAT_004",
-        "severity": "GRIS",
-        "symptom": "Renouvellement d'ordonnance",
-        "location": "wr_03",
-        "status": "waiting",
-        "arrival_time": 60,
-        "treatment_end_time": 0
-      }
-    },
+    "patients": {},
     "staff": {
       "DOC_01": {
         "id": "DOC_01",
         "role": "medecin_consultation",
         "location": "consultation",
         "is_busy": false,
-        "busy_until": 0
+        "busy_until": 0,
+        "is_present": true
       },
       "INF_TRIAGE_01": {
         "id": "INF_TRIAGE_01",
         "role": "infirmier_triage",
         "location": "triage",
         "is_busy": false,
-        "busy_until": 0
+        "busy_until": 0,
+        "is_present": true
       },
       "INF_SALLE_01": {
         "id": "INF_SALLE_01",
         "role": "infirmier_salles",
         "location": "wr_01",
         "is_busy": false,
-        "busy_until": 0
+        "busy_until": 0,
+        "is_present": true
       },
       "INF_SALLE_02": {
         "id": "INF_SALLE_02",
         "role": "infirmier_salles",
         "location": "wr_02",
         "is_busy": false,
-        "busy_until": 0
+        "busy_until": 0,
+        "is_present": true
       },
       "AS_01": {
         "id": "AS_01",
         "role": "aide_soignant_transport",
         "location": "wr_03",
         "is_busy": false,
-        "busy_until": 0
+        "busy_until": 0,
+        "is_present": true
       },
       "AS_02": {
         "id": "AS_02",
         "role": "aide_soignant_transport",
         "location": "wr_03",
         "is_busy": false,
-        "busy_until": 0
+        "busy_until": 0,
+        "is_present": true
       }
     },
     "transport_consultation_active": false,

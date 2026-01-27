@@ -54,8 +54,9 @@ class Staff(BaseModel):
     location: str
     is_busy: bool = False
     busy_until: int = 0
-    # NOUVEAU : Pour se souvenir du code de retour (ex: tran_consult_wr)
     return_transport_code: Optional[str] = None 
+    # NOUVEAU : Gestion Présence/Absence
+    is_present: bool = True
 
 class Room(BaseModel):
     id: str
@@ -69,14 +70,14 @@ class Room(BaseModel):
 class PatientLog(BaseModel):
     timestamp: int
     id: str
-    location: str          # Code transport ou salle
+    location: str
     severity: str
     escort_id: Optional[str] = None
 
 class StaffLog(BaseModel):
     timestamp: int
     id: str
-    location: str          # Code transport
+    location: str
     patient_handling_id: Optional[str] = None
     patient_symptom: Optional[str] = None
     patient_color: Optional[str] = None

@@ -582,6 +582,195 @@
         "location": "tran_wr_hos",
         "severity": "GRIS",
         "escort_id": "AS_01"
+      },
+      {
+        "timestamp": 155,
+        "id": "PAT_001",
+        "location": "consultation",
+        "severity": "ROUGE",
+        "escort_id": null
+      },
+      {
+        "timestamp": 160,
+        "id": "PAT_002",
+        "location": "soins_critiques",
+        "severity": "ROUGE",
+        "escort_id": null
+      },
+      {
+        "timestamp": 70,
+        "id": "PAT_001",
+        "location": "wr_01",
+        "severity": "GRIS",
+        "escort_id": null
+      },
+      {
+        "timestamp": 170,
+        "id": "PAT_001",
+        "location": "return_to_wr_for_hos",
+        "severity": "GRIS",
+        "escort_id": null
+      },
+      {
+        "timestamp": 170,
+        "id": "PAT_001",
+        "location": "tran_wr_hos",
+        "severity": "GRIS",
+        "escort_id": "AS_01"
+      },
+      {
+        "timestamp": 395,
+        "id": "PAT_002",
+        "location": "tran_wr_consult",
+        "severity": "GRIS",
+        "escort_id": "AS_01"
+      },
+      {
+        "timestamp": 455,
+        "id": "PAT_002",
+        "location": "return_to_wr_for_hos",
+        "severity": "GRIS",
+        "escort_id": null
+      },
+      {
+        "timestamp": 455,
+        "id": "PAT_002",
+        "location": "tran_wr_consult",
+        "severity": "GRIS",
+        "escort_id": "AS_01"
+      },
+      {
+        "timestamp": 475,
+        "id": "PAT_002",
+        "location": "return_to_wr_for_hos",
+        "severity": "GRIS",
+        "escort_id": null
+      },
+      {
+        "timestamp": 475,
+        "id": "PAT_002",
+        "location": "tran_wr_consult",
+        "severity": "GRIS",
+        "escort_id": "AS_01"
+      },
+      {
+        "timestamp": 520,
+        "id": "PAT_002",
+        "location": "exit_from_consult",
+        "severity": "UNKNOWN",
+        "escort_id": null
+      },
+      {
+        "timestamp": 535,
+        "id": "PAT_004",
+        "location": "return_to_wr_for_hos",
+        "severity": "GRIS",
+        "escort_id": null
+      },
+      {
+        "timestamp": 535,
+        "id": "PAT_004",
+        "location": "tran_wr_hos",
+        "severity": "GRIS",
+        "escort_id": "AS_01"
+      },
+      {
+        "timestamp": 550,
+        "id": "PAT_005",
+        "location": "return_to_wr_for_hos",
+        "severity": "GRIS",
+        "escort_id": null
+      },
+      {
+        "timestamp": 550,
+        "id": "PAT_005",
+        "location": "tran_wr_hos",
+        "severity": "GRIS",
+        "escort_id": "AS_02"
+      },
+      {
+        "timestamp": 595,
+        "id": "PAT_009",
+        "location": "return_to_wr_for_hos",
+        "severity": "VERT",
+        "escort_id": null
+      },
+      {
+        "timestamp": 595,
+        "id": "PAT_009",
+        "location": "tran_wr_hos",
+        "severity": "VERT",
+        "escort_id": "AS_01"
+      },
+      {
+        "timestamp": 610,
+        "id": "PAT_003",
+        "location": "return_to_wr_for_hos",
+        "severity": "GRIS",
+        "escort_id": null
+      },
+      {
+        "timestamp": 610,
+        "id": "PAT_003",
+        "location": "tran_wr_hos",
+        "severity": "GRIS",
+        "escort_id": "AS_02"
+      },
+      {
+        "timestamp": 655,
+        "id": "PAT_006",
+        "location": "exit_from_consult",
+        "severity": "UNKNOWN",
+        "escort_id": null
+      },
+      {
+        "timestamp": 655,
+        "id": "PAT_015",
+        "location": "wr_01",
+        "severity": "GRIS",
+        "escort_id": null
+      },
+      {
+        "timestamp": 645,
+        "id": "PAT_001",
+        "location": "wr_01",
+        "severity": "GRIS",
+        "escort_id": null
+      },
+      {
+        "timestamp": 645,
+        "id": "PAT_002",
+        "location": "wr_02",
+        "severity": "GRIS",
+        "escort_id": null
+      },
+      {
+        "timestamp": 1175,
+        "id": "PAT_001",
+        "location": "exit_from_consult",
+        "severity": "UNKNOWN",
+        "escort_id": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "PAT_004",
+        "location": "return_to_wr_for_hos",
+        "severity": "GRIS",
+        "escort_id": null
+      },
+      {
+        "timestamp": 40,
+        "id": "PAT_001",
+        "location": "return_to_wr_for_hos",
+        "severity": "GRIS",
+        "escort_id": null
+      },
+      {
+        "timestamp": 30,
+        "id": "PAT_001",
+        "location": "exit_from_consult",
+        "severity": "UNKNOWN",
+        "escort_id": null
       }
     ],
     "logs_staff": [
@@ -1029,6 +1218,2134 @@
         "timestamp": 345,
         "id": "AS_01",
         "location": "tran_hos_hos",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 130,
+        "id": "INF_TRIAGE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 170,
+        "id": "AS_01",
+        "location": "unknown",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 170,
+        "id": "AS_01",
+        "location": "tran_wr_hos",
+        "patient_handling_id": "PAT_001",
+        "patient_symptom": "Renouvellement d'ordonnance",
+        "patient_color": "GRIS"
+      },
+      {
+        "timestamp": 215,
+        "id": "AS_01",
+        "location": "tran_hos_hos",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 395,
+        "id": "INF_TRIAGE_01",
+        "location": "moved_to_triage",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 395,
+        "id": "INF_SALLE_02",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 395,
+        "id": "INF_SALLE_02",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 395,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_triage",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 395,
+        "id": "INF_TRIAGE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 395,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 395,
+        "id": "INF_TRIAGE_01",
+        "location": "moved_to_triage",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 395,
+        "id": "INF_TRIAGE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 395,
+        "id": "INF_TRIAGE_01",
+        "location": "moved_to_triage",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 395,
+        "id": "AS_01",
+        "location": "tran_wr_consult",
+        "patient_handling_id": "PAT_002",
+        "patient_symptom": "Renouvellement d'ordonnance",
+        "patient_color": "GRIS"
+      },
+      {
+        "timestamp": 455,
+        "id": "AS_01",
+        "location": "tran_consult_wr",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 455,
+        "id": "AS_01",
+        "location": "tran_wr_consult",
+        "patient_handling_id": "PAT_002",
+        "patient_symptom": "Renouvellement d'ordonnance",
+        "patient_color": "GRIS"
+      },
+      {
+        "timestamp": 465,
+        "id": "AS_01",
+        "location": "tran_consult_wr",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 475,
+        "id": "INF_TRIAGE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 475,
+        "id": "INF_TRIAGE_01",
+        "location": "moved_to_triage",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 475,
+        "id": "AS_01",
+        "location": "tran_wr_consult",
+        "patient_handling_id": "PAT_002",
+        "patient_symptom": "Renouvellement d'ordonnance",
+        "patient_color": "GRIS"
+      },
+      {
+        "timestamp": 520,
+        "id": "AS_01",
+        "location": "tran_consult_wr",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 535,
+        "id": "AS_01",
+        "location": "unknown",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 535,
+        "id": "AS_01",
+        "location": "tran_wr_hos",
+        "patient_handling_id": "PAT_004",
+        "patient_symptom": "Renouvellement d'ordonnance",
+        "patient_color": "GRIS"
+      },
+      {
+        "timestamp": 545,
+        "id": "AS_02",
+        "location": "unknown",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 550,
+        "id": "AS_02",
+        "location": "tran_wr_hos",
+        "patient_handling_id": "PAT_005",
+        "patient_symptom": "Renouvellement d'ordonnance",
+        "patient_color": "GRIS"
+      },
+      {
+        "timestamp": 580,
+        "id": "AS_01",
+        "location": "unknown",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 585,
+        "id": "AS_01",
+        "location": "unknown",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 595,
+        "id": "AS_02",
+        "location": "unknown",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 595,
+        "id": "AS_01",
+        "location": "tran_wr_hos",
+        "patient_handling_id": "PAT_009",
+        "patient_symptom": "Entorse de cheville l\u00e9g\u00e8re \u00e0 mod\u00e9r\u00e9e",
+        "patient_color": "VERT"
+      },
+      {
+        "timestamp": 610,
+        "id": "AS_02",
+        "location": "unknown",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 610,
+        "id": "AS_02",
+        "location": "tran_wr_hos",
+        "patient_handling_id": "PAT_003",
+        "patient_symptom": "Renouvellement d'ordonnance",
+        "patient_color": "GRIS"
+      },
+      {
+        "timestamp": 640,
+        "id": "AS_01",
+        "location": "unknown",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "AS_01",
+        "location": "unknown",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "AS_02",
+        "location": "unknown",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_03",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_03",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_03",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_03",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_03",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_03",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_02",
+        "location": "moved_to_wr_03",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 655,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 645,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1175,
+        "id": "AS_01",
+        "location": "unknown",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1175,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1175,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1175,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1175,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1175,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1175,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1175,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1175,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1175,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1175,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1175,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1175,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1175,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1175,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1175,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1175,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1175,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "AS_01",
+        "location": "unknown",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_01",
+        "patient_handling_id": null,
+        "patient_symptom": null,
+        "patient_color": null
+      },
+      {
+        "timestamp": 1260,
+        "id": "INF_SALLE_01",
+        "location": "moved_to_wr_02",
         "patient_handling_id": null,
         "patient_symptom": null,
         "patient_color": null

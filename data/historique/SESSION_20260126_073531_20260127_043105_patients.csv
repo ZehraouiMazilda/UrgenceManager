@@ -107,3 +107,4 @@ timestamp;id;location;severity;escort_id
 645;PAT_002;wr_02;GRIS;
 1175;PAT_001;exit_from_consult;UNKNOWN;
 1260;PAT_004;return_to_wr_for_hos;GRIS;
+40;PAT_001;return_to_wr_for_hos;GRIS;
