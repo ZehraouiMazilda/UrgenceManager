@@ -1,0 +1,182 @@
+{
+  "hospital_name": "Urgence",
+  "constants": {
+    "transport_times_min": {
+      "to_unit": 45,
+      "to_consultation": 5
+    },
+    "capacities_max": {
+      "waiting_rooms": {
+        "wr_01": 5,
+        "wr_02": 10,
+        "wr_03": 5
+      },
+      "consultation_room": 1,
+      "soins_critiques": 5,
+      "units": {
+        "ortho": 6,
+        "neuro": 9,
+        "pneumo": 12,
+        "cardio": 12
+      }
+    }
+  },
+  "state": {
+    "time": 0,
+    "is_running": false,
+    "triage_zone": {
+      "id": "triage",
+      "name": "Zone Triage",
+      "capacity": 100,
+      "occupancy": 0,
+      "patients": [],
+      "staff": [
+        "INF_TRIAGE_01"
+      ]
+    },
+    "waiting_rooms": {
+      "wr_01": {
+        "id": "wr_01",
+        "name": "Salle 1",
+        "capacity": 5,
+        "occupancy": 0,
+        "patients": [],
+        "staff": [
+          "INF_SALLE_01"
+        ]
+      },
+      "wr_02": {
+        "id": "wr_02",
+        "name": "Salle 2",
+        "capacity": 10,
+        "occupancy": 0,
+        "patients": [],
+        "staff": [
+          "INF_SALLE_02"
+        ]
+      },
+      "wr_03": {
+        "id": "wr_03",
+        "name": "Salle 3",
+        "capacity": 5,
+        "occupancy": 0,
+        "patients": [],
+        "staff": [
+          "AS_01",
+          "AS_02"
+        ]
+      }
+    },
+    "consultation_room": {
+      "id": "consultation",
+      "name": "Box Consultation",
+      "capacity": 1,
+      "occupancy": 0,
+      "patients": [],
+      "staff": [
+        "DOC_01"
+      ]
+    },
+    "soins_critiques": {
+      "id": "soins_critiques",
+      "name": "Soins Critiques",
+      "capacity": 5,
+      "occupancy": 0,
+      "patients": [],
+      "staff": []
+    },
+    "units": {
+      "ortho": {
+        "id": "ortho",
+        "name": "Orthopédie",
+        "capacity": 6,
+        "occupancy": 0,
+        "patients": [],
+        "staff": []
+      },
+      "neuro": {
+        "id": "neuro",
+        "name": "Neurologie",
+        "capacity": 9,
+        "occupancy": 0,
+        "patients": [],
+        "staff": []
+      },
+      "pneumo": {
+        "id": "pneumo",
+        "name": "Pneumologie",
+        "capacity": 12,
+        "occupancy": 0,
+        "patients": [],
+        "staff": []
+      },
+      "cardio": {
+        "id": "cardio",
+        "name": "Cardiologie",
+        "capacity": 12,
+        "occupancy": 0,
+        "patients": [],
+        "staff": []
+      }
+    },
+    "patients": {},
+    "staff": {
+      "DOC_01": {
+        "id": "DOC_01",
+        "role": "medecin_consultation",
+        "location": "consultation",
+        "is_busy": false,
+        "busy_until": 0,
+        "return_transport_code": null,
+        "is_present": true
+      },
+      "INF_TRIAGE_01": {
+        "id": "INF_TRIAGE_01",
+        "role": "infirmier_triage",
+        "location": "triage",
+        "is_busy": false,
+        "busy_until": 0,
+        "return_transport_code": null,
+        "is_present": true
+      },
+      "INF_SALLE_01": {
+        "id": "INF_SALLE_01",
+        "role": "infirmier_salles",
+        "location": "wr_01",
+        "is_busy": false,
+        "busy_until": 0,
+        "return_transport_code": null,
+        "is_present": true
+      },
+      "INF_SALLE_02": {
+        "id": "INF_SALLE_02",
+        "role": "infirmier_salles",
+        "location": "wr_02",
+        "is_busy": false,
+        "busy_until": 0,
+        "return_transport_code": null,
+        "is_present": true
+      },
+      "AS_01": {
+        "id": "AS_01",
+        "role": "aide_soignant_transport",
+        "location": "wr_03",
+        "is_busy": false,
+        "busy_until": 0,
+        "return_transport_code": null,
+        "is_present": true
+      },
+      "AS_02": {
+        "id": "AS_02",
+        "role": "aide_soignant_transport",
+        "location": "wr_03",
+        "is_busy": false,
+        "busy_until": 0,
+        "return_transport_code": null,
+        "is_present": true
+      }
+    },
+    "transport_consultation_active": false,
+    "transport_hospital_active": false
+  }
+}
