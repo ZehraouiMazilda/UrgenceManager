@@ -383,7 +383,7 @@ SUGGESTED_QUESTIONS = [
 def show_ai_assistant():
     """Page principale de l'AI Assistant avec RAG."""
     
-    st.set_page_config(page_title="🤖 AI Assistant", layout="wide")
+    #st.set_page_config(page_title="🤖 AI Assistant", layout="wide")
     
     st.title("🤖 AI Assistant - Analyse Intelligente des Urgences")
     st.markdown("**RAG (Retrieval-Augmented Generation)** : Questions sur la session actuelle et l'historique")

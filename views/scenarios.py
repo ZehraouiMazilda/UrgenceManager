@@ -357,7 +357,7 @@ def run_scenario(scenario_key: str, progress_bar, status_text):
 def show_scenarios():
     """Page principale des scénarios."""
     
-    st.set_page_config(page_title="🎬 Scénarios de Démo", layout="wide")
+    #st.set_page_config(page_title="🎬 Scénarios de Démo", layout="wide")
     
     st.title("🎬 Scénarios de Démonstration")
     st.markdown("**Scénarios pré-configurés pour tester et démontrer le système**")

@@ -491,7 +491,7 @@ def plot_patient_flow_sankey(df_patients: pd.DataFrame):
 # =============================================================================
 
 def main():
-    st.set_page_config(page_title="📊 Statistiques & Monitoring", layout="wide")
+    #st.set_page_config(page_title="📊 Statistiques & Monitoring", layout="wide")
     
     st.title("📊 Statistiques Avancées & Monitoring")
     st.markdown("**Machine Learning + Analyse Métier + Monitoring Système**")
