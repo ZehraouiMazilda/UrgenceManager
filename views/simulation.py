@@ -444,7 +444,7 @@ def show_simulation():
     # GAME LOOP
     # =========================================================================
     if st.session_state.sim_running:
-        time.sleep(1.0)
+        time.sleep(2.0)
         st.session_state.sim_time += 5
         upd = False
         curr = load_initial_state(state_path); curr.time = st.session_state.sim_time
