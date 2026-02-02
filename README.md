@@ -1,6 +1,6 @@
 <div align="center">
 
-# Urgence Manager
+<img src="img/logo.png" alt="Urgence Manager logo" width="180"/>
 
 ### *Gestion logistique agentique des urgences hospitalières*
 
