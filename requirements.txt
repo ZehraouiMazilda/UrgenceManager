@@ -1,7 +1,8 @@
-streamlit>=1.30.0
-pydantic>=2.5.0
-mistralai>=0.1.0
-scikit-learn>=1.3.0
-python-dotenv>=1.0.0
-black
-pylint
+streamlit==1.32.2
+pandas==2.2.3
+numpy==1.26.4
+plotly==5.22.0
+python-dotenv==1.0.1
+mistralai==1.2.0
+requests==2.32.3
+scikit-learn==1.5.2
