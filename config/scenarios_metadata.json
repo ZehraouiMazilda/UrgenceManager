@@ -1,13 +1,25 @@
 {
+  "test_parfait_24h.json": {
+    "title": "✨ Scénario de Référence : Configuration Optimale",
+    "description": "Personnel complet, pas de violations. Sert de baseline pour comparaisons.",
+    "duration": "24 heures",
+    "difficulty": "Standard"
+  },
+  "test_priorites_24h.json": {
+    "title": "🚨 Validation des Priorités : ROUGE > JAUNE > VERT",
+    "description": "Validation stricte de l'ordre de priorité ROUGE > JAUNE > VERT > GRIS sur 24h avec vagues de patients mixtes. Le LLM DOIT toujours respecter cet ordre pour l'accès à la consultation, même sous pression.",
+    "duration": "24 heures",
+    "difficulty": "Intermédiaire"
+  },
   "test_1_as_24h.json": {
     "title": "🎯 Test d'Optimisation : Personnel Minimal (1 AS)",
-    "description": "Évalue la priorisation avec seulement DOC_01 et AS_01. Violations de surveillance attendues.",
+    "description": "Validation de l'optimisation avec SEULEMENT DOC_01 et AS_01. Aucune infirmière disponible (ni triage, ni salles). AS_01 doit gérer SEUL tous les transports et la surveillance devient impossible. Test de la priorisation absolue : Consultation > Hôpital",
     "duration": "24 heures",
     "difficulty": "Expert"
   },
   "test_priorites_24h.json": {
     "title": "🚨 Validation des Priorités : ROUGE > JAUNE > VERT",
-    "description": "Vérifie que le système respecte strictement la hiérarchie des urgences.",
+    "description": "Validation stricte de l'ordre de priorité ROUGE > JAUNE > VERT > GRIS sur 24h avec vagues de patients mixtes. Le LLM DOIT toujours respecter cet ordre pour l'accès à la consultation, même sous pression.",
     "duration": "24 heures",
     "difficulty": "Intermédiaire"
   },
@@ -19,27 +31,21 @@
   },
   "test_inf_triage_as_24h.json": {
     "title": "🏥 Personnel Triage + AS : Gestion Sans Surveillance Salles",
-    "description": "Évalue l'impact d'avoir uniquement une infirmière au triage.",
+    "description": "Validation de la gestion SANS INF_SALLE : Seulement INF_TRIAGE + AS_01 + AS_02 présents. Les salles d'attente n'ont AUCUNE surveillance infirmière possible. Le LLM doit accepter cette situation ou optimiser les transferts directs vers consultation.",
     "duration": "24 heures",
     "difficulty": "Avancé"
   },
   "test_1_inf_salle_24h.json": {
     "title": "🔄 Rotation Infirmière : Optimisation 3 Salles",
-    "description": "Une seule infirmière doit gérer 3 salles d'attente en rotation.",
+    "description": "Validation de la rotation intelligente : INF_SALLE_02 absente, INF_SALLE_01 SEULE doit surveiller les 3 salles. Le LLM doit implémenter une rotation optimale toutes les 10-12 min pour qu'aucune salle ne dépasse 15 min sans surveillance.",
     "duration": "24 heures",
     "difficulty": "Expert"
   },
   "test_saturation_sc_24h.json": {
     "title": "⚠️ Saturation des Soins Critiques : Gestion du Boarding",
-    "description": "Teste le comportement quand les soins critiques sont pleins.",
+    "description": "Validation de la gestion quand Soins Critiques est SATURÉ (5/5 lits occupés) : Les patients ROUGE ne peuvent plus aller en SC. Le LLM DOIT les orienter vers Consultation puis Salle d'attente (boarding) avec medical_decision='soins_critiques'.",
     "duration": "24 heures",
     "difficulty": "Avancé"
-  },
-  "test_parfait_24h.json": {
-    "title": "✨ Scénario de Référence : Configuration Optimale",
-    "description": "Personnel complet, pas de violations. Sert de baseline pour comparaisons.",
-    "duration": "24 heures",
-    "difficulty": "Standard"
   },
   "test_critique_24h.json": {
     "title": "🔥 Test Ultime : Stress Maximum",
