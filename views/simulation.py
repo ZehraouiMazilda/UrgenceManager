@@ -4,6 +4,7 @@ Intègre : Simulation + Gestion Scénarios (Fix Pydantic) + Verrouillage UI
 """
 
 import streamlit as st
+from typing import Dict, List, Tuple, Optional, Any
 import time
 import random
 import re
@@ -24,7 +25,6 @@ from mistralai import Mistral
 # CHARGEMENT
 # =============================================================================
 
-
 def load_symptoms() -> Dict[str, List[str]]:
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     symptoms_path = os.path.join(base_dir, "data", "symptoms.json")
@@ -39,105 +39,95 @@ def load_symptoms() -> Dict[str, List[str]]:
             "GRIS": ["Rhume"],
         }
 
-
 def load_full_file(path: str) -> StateFile:
     """Charge un état complet (StateFile)"""
     with open(path, "r", encoding="utf-8") as f:
         return StateFile(**json.load(f))
 
-
 def get_scenarios_with_metadata(base_dir: str) -> List[Dict[str, str]]:
     """Charge les scénarios avec leurs métadonnées élégantes"""
     scenarios_dir = os.path.join(base_dir, "data", "scenarios")
     metadata_path = os.path.join(base_dir, "config", "scenarios_metadata.json")
-
+    
     metadata = {}
     if os.path.exists(metadata_path):
-        with open(metadata_path, "r", encoding="utf-8") as f:
+        with open(metadata_path, 'r', encoding='utf-8') as f:
             metadata = json.load(f)
-
+    
     if not os.path.exists(scenarios_dir):
         return []
-
+    
     scenarios = []
     for filename in os.listdir(scenarios_dir):
-        if filename.endswith(".json"):
+        if filename.endswith('.json'):
             if filename in metadata:
-                scenarios.append(
-                    {
-                        "filename": filename,
-                        "title": metadata[filename]["title"],
-                        "description": metadata[filename]["description"],
-                        "duration": metadata[filename]["duration"],
-                        "difficulty": metadata[filename]["difficulty"],
-                    }
-                )
+                scenarios.append({
+                    'filename': filename,
+                    'title': metadata[filename]['title'],
+                    'description': metadata[filename]['description'],
+                    'duration': metadata[filename]['duration'],
+                    'difficulty': metadata[filename]['difficulty']
+                })
             else:
-                clean_name = filename.replace(".json", "").replace("_", " ").title()
-                scenarios.append(
-                    {
-                        "filename": filename,
-                        "title": clean_name,
-                        "description": "Scénario de test",
-                        "duration": "N/A",
-                        "difficulty": "N/A",
-                    }
-                )
+                clean_name = filename.replace('.json', '').replace('_', ' ').title()
+                scenarios.append({
+                    'filename': filename,
+                    'title': clean_name,
+                    'description': 'Scénario de test',
+                    'duration': 'N/A',
+                    'difficulty': 'N/A'
+                })
     return scenarios
 
-
-def execute_scenario_timeline(
-    state: StateFile, scenario_data: Dict[str, Any], current_time: int, base_dir: str
-) -> bool:
+def execute_scenario_timeline(state: StateFile, scenario_data: Dict[str, Any], current_time: int, base_dir: str) -> bool:
     """Exécute les actions du scénario au temps donné"""
-    timeline = scenario_data.get("timeline", [])
+    timeline = scenario_data.get('timeline', [])
     actions_executed = False
-
+    
     for action in timeline:
-        if action.get("t") == current_time:
-            action_type = action.get("action")
-
-            if not action_type or action_type == "comment":
+        if action.get('t') == current_time:
+            action_type = action.get('action')
+            
+            if not action_type or action_type == 'comment':
                 continue
-
-            if action_type == "inject_patient":
-                severity = action.get("severity")
-                symptom = action.get("symptom", "Symptôme générique")
-
+            
+            if action_type == 'inject_patient':
+                severity = action.get('severity')
+                symptom = action.get('symptom', 'Symptôme générique')
+                
                 if "scenario_patient_counter" not in st.session_state:
                     st.session_state.scenario_patient_counter = 1
-
+                
                 new_id = f"PAT_{st.session_state.scenario_patient_counter:03d}"
                 st.session_state.scenario_patient_counter += 1
-
+                
                 new_patient = Patient(
                     id=new_id,
                     severity=Severity[severity],
                     symptom=symptom,
                     location="triage",
                     status=PatientStatus.WAITING,
-                    arrival_time=current_time,
+                    arrival_time=current_time
                 )
-
+                
                 state.patients[new_id] = new_patient
                 state.triage_zone.patients.append(new_id)
                 state.triage_zone.occupancy += 1
-
+                
                 log_event(state, "PATIENT", new_id, "injected_triage")
-
+                
                 st.session_state.brain_logs.append(
                     f"[{current_time//60}h{current_time%60:02d}] ➕ {new_id} ({severity}) arrivé au triage"
                 )
-
+                
                 actions_executed = True
-
+    
     return actions_executed
 
 
 # =============================================================================
 # SESSION CSV - CRÉER AU DÉMARRAGE
 # =============================================================================
-
 
 def ensure_csv_session_initialized(base_dir: str) -> None:
     """Crée le fichier CSV de session au DÉMARRAGE (pas au reset)"""
@@ -175,11 +165,9 @@ def ensure_csv_session_initialized(base_dir: str) -> None:
 
         print(f"✅ CSV Session créée : {st.session_state.csv_session_id}")
 
-
 # =============================================================================
 # GÉNÉRATION UNIQUE IDs PATIENTS
 # =============================================================================
-
 
 def generate_unique_patient_id(state):
     """Génère un ID patient unique pour la session"""
@@ -195,15 +183,11 @@ def generate_unique_patient_id(state):
             return new_id
         counter += 1
 
-
 # =============================================================================
 # LECTURE CSV POUR STATS
 # =============================================================================
 
-
-def load_session_csv_data(
-    base_dir: str,
-) -> Tuple[Optional[pd.DataFrame], Optional[pd.DataFrame]]:
+def load_session_csv_data(base_dir: str) -> Tuple[Optional[pd.DataFrame], Optional[pd.DataFrame]]:
     """Charge les données CSV de la session en cours"""
     if "csv_session_id" not in st.session_state:
         return None, None
@@ -219,15 +203,11 @@ def load_session_csv_data(
     except:
         return None, None
 
-
 # =============================================================================
 # GRAPHIQUES AVEC DONNÉES CSV COMPLÈTES
 # =============================================================================
 
-
-def create_complete_statistics_charts(
-    base_dir: str, state: StateFile
-) -> Tuple[go.Figure, go.Figure, go.Figure, go.Figure, go.Figure, go.Figure]:
+def create_complete_statistics_charts(base_dir: str, state: StateFile) -> Tuple[go.Figure, go.Figure, go.Figure, go.Figure, go.Figure, go.Figure]:
     """Graphiques basés sur TOUT le CSV (patients sortis inclus)"""
 
     df_patients, df_staff = load_session_csv_data(base_dir)
@@ -240,9 +220,9 @@ def create_complete_statistics_charts(
         )
         fig.update_layout(height=350)
         return fig, fig, fig, fig, fig, fig
-
+    
     # Vérifier que les colonnes nécessaires existent
-    if "timestamp" not in df_patients.columns:
+    if 'timestamp' not in df_patients.columns:
         fig = go.Figure()
         fig.add_annotation(
             text="CSV en cours de création...", showarrow=False, font_size=14
@@ -460,9 +440,9 @@ def create_complete_statistics_charts(
 
     return fig1, fig2, fig3, fig4, fig5, fig6
 
-    # =============================================================================
-    # HELPERS
-    # =============================================================================
+# =============================================================================
+# HELPERS
+# =============================================================================
 
     for p in state.patients.values():
         score = 4 if p.severity.value == "ROUGE" else 0
@@ -505,7 +485,6 @@ def create_complete_statistics_charts(
                 del st.session_state.nurse_timers[rid]
     return violations
 
-
 def check_presence(state, room_staff_list, role_tag):
     found = []
     for s_id in room_staff_list:
@@ -513,7 +492,6 @@ def check_presence(state, room_staff_list, role_tag):
         if ag and role_tag in s_id and ag.is_present and not ag.is_busy:
             found.append(s_id)
     return f"🟢 {', '.join(found)}" if found else "❌"
-
 
 def format_patient_colored(patient, current_time):
     if not patient:
@@ -537,7 +515,6 @@ def format_patient_colored(patient, current_time):
             return f"{base} (✅ Sortie)"
 
     return base
-
 
 def get_medical_decision(severity: Severity) -> str:
     roll = random.random()
@@ -564,7 +541,6 @@ def get_medical_decision(severity: Severity) -> str:
         )
     else:
         return "exit"
-
 
 def get_priority_dataframe(state: StateFile) -> pd.DataFrame:
     """Calcule le score de priorité actuel pour affichage"""
@@ -621,15 +597,11 @@ def get_priority_dataframe(state: StateFile) -> pd.DataFrame:
     df = pd.DataFrame(data)
     return df.sort_values(by="Score", ascending=False)
 
-
 # =============================================================================
 # INJECTION PATIENT
 # =============================================================================
 
-
-def inject_patient(
-    state: StateFile, severity_str: str, symptom: str, location_id: str, state_path: str
-) -> None:
+def inject_patient(state: StateFile, severity_str: str, symptom: str, location_id: str, state_path: str) -> None:
     target_room = None
     as_needed = False
     real_location_id = location_id
@@ -671,15 +643,11 @@ def inject_patient(
 
         candidates = []
         if location_id == "transport_hospital":
-            if as2_p:
-                candidates = [as2]
-            elif as1_p:
-                candidates = [as1]
+            if as2_p: candidates = [as2]
+            elif as1_p: candidates = [as1]
         else:
-            if as1_p:
-                candidates = [as1]
-            elif as2_p:
-                candidates = [as2]
+            if as1_p: candidates = [as1]
+            elif as2_p: candidates = [as2]
 
         for c in candidates:
             if not c.is_busy:
@@ -763,11 +731,9 @@ def inject_patient(
     as_msg = f" escorté par {target_as.id}" if as_needed and target_as else ""
     return new_id, f"✅ {new_id} ({severity_str}){as_msg} -> {target_room.name}"
 
-
 # =============================================================================
 # SHOW SIMULATION
 # =============================================================================
-
 
 def show_simulation() -> None:
     if "sim_running" not in st.session_state:
@@ -799,156 +765,202 @@ def show_simulation() -> None:
 
     state = st.session_state.hospital_state
 
-    st.markdown("## 🎮 Simulateur Live (God Mode)")
-
+    # === INTRO ÉLÉGANTE ===
+    st.markdown("# 🏥 Simulateur et Régulateur d'Urgences")
+    
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                padding: 20px; border-radius: 10px; color: white; margin-bottom: 20px;">
+        <h3 style="margin-top: 0; color: white;">Système Intelligent de Gestion des Urgences</h3>
+        <p style="margin-bottom: 0;">
+            Simulez et optimisez le flux de patients dans un service d'urgences avec l'assistance 
+            d'une intelligence artificielle. Testez différents scénarios, analysez les performances 
+            et validez le respect des protocoles de sécurité.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Guide d'utilisation complet
+    with st.expander("📖 Guide d'Utilisation - Comment ça marche ?", expanded=False):
+        st.markdown("""
+        ### 🎮 Modes de Simulation
+        
+        Le simulateur propose **deux modes** d'utilisation :
+        
+        #### 1️⃣ Mode Scénarios Automatiques (Recommandé)
+        
+        **Objectif :** Tester le système dans des conditions prédéfinies
+        
+        **Comment l'utiliser :**
+        1. Ouvrez l'expander **"🎭 Scénarios de Test Prédéfinis"**
+        2. Sélectionnez un scénario dans la liste déroulante
+        3. Lisez la description et les objectifs
+        4. Cliquez sur **"🚀 Lancer le Scénario"**
+        5. ✅ La simulation démarre **automatiquement** !
+        6. Observez l'exécution en temps réel
+        
+        **Note importante :** Une fois le scénario lancé, les injections de patients se font 
+        automatiquement selon le planning prédéfini. Vous n'avez qu'à observer !
+        
+        ---
+        
+        ### 📚 Types de Scénarios Disponibles
+        
+        - **🎯 Tests d'Optimisation** : Personnel minimal, gestion des ressources limitées
+        - **🚨 Validation des Priorités** : Vérification stricte ROUGE > JAUNE > VERT > GRIS
+        - **👁️ Contrôle de Surveillance** : Tests protocoles sécurité (règle des 15 minutes)
+        - **⚠️ Situations de Saturation** : Gestion des débordements et du boarding
+        - **✨ Scénarios de Référence** : Configuration optimale, baseline pour comparaisons
+        
+        ---
+        
+        ### 🧠 Assistant IA Intégré
+        
+        L'assistant IA peut :
+        - Répondre aux questions sur les patients
+        - Expliquer les décisions prises
+        - Suggérer des modifications (si guardrails OK)
+        
+        ---
+        
+        ### 📊 Statistiques en Temps Réel
+        
+        En bas de page : **6 graphiques Plotly**
+        1. Répartition patients dans le temps
+        2. Total patients par gravité
+        3. Activité Aides-Soignants
+        4. Temps d'attente moyen
+        5. Destinations finales
+        6. Parcours patients (Sankey)
+        """)
+    
+    st.markdown("---")
+    
     # === GESTION DES SCÉNARIOS ===
-    with st.expander(
-        "🎭 Scénarios de Test Prédéfinis", expanded=not st.session_state.sim_running
-    ):
+    with st.expander("🎭 Scénarios de Test Prédéfinis", expanded=not st.session_state.sim_running):
         scenarios = get_scenarios_with_metadata(base_dir)
-
+        
         if not scenarios:
             st.info("📁 Aucun scénario trouvé dans `data/scenarios/`")
         else:
-            scenario_titles = [s["title"] for s in scenarios]
-
+            scenario_titles = [s['title'] for s in scenarios]
+            
             col_select, col_info = st.columns([2, 1])
-
+            
             with col_select:
                 selected_title = st.selectbox(
                     "Sélectionner un scénario",
                     scenario_titles,
                     disabled=st.session_state.sim_running,
-                    key="scenario_selector",
+                    key="scenario_selector"
                 )
-
-            selected_scenario = next(
-                s for s in scenarios if s["title"] == selected_title
-            )
-
+            
+            selected_scenario = next(s for s in scenarios if s['title'] == selected_title)
+            
             with col_info:
-                st.metric("Durée", selected_scenario["duration"])
+                st.metric("Durée", selected_scenario['duration'])
                 st.caption(f"Difficulté : {selected_scenario['difficulty']}")
-
+            
             # Description détaillée
             with st.container(border=True):
                 st.markdown(f"**📝 Description**")
-                st.write(selected_scenario["description"])
-                st.caption(
-                    f"⏱️ Durée totale : {selected_scenario['duration']} | 🎯 Niveau : {selected_scenario['difficulty']}"
-                )
-
+                st.write(selected_scenario['description'])
+                st.caption(f"⏱️ Durée totale : {selected_scenario['duration']} | 🎯 Niveau : {selected_scenario['difficulty']}")
+            
             col_launch, col_stop = st.columns(2)
-
+            
             with col_launch:
                 if st.button(
                     "🚀 Lancer le Scénario",
                     use_container_width=True,
-                    disabled=st.session_state.sim_running
-                    or st.session_state.scenario_active,
-                    type="primary",
+                    disabled=st.session_state.sim_running or st.session_state.scenario_active,
+                    type="primary"
                 ):
                     try:
                         st.info(f"📁 Chargement : {selected_scenario['filename']}")
-                        sc_path = os.path.join(
-                            base_dir, "data", "scenarios", selected_scenario["filename"]
-                        )
-
+                        sc_path = os.path.join(base_dir, "data", "scenarios", selected_scenario['filename'])
+                        
                         if not os.path.exists(sc_path):
                             st.error(f"❌ Fichier introuvable : {sc_path}")
                             st.stop()
-
+                        
                         st.info("✓ Chargement état initial...")
                         initial_state = load_initial_state(initial_path)
-
-                        with open(sc_path, "r", encoding="utf-8") as f:
+                        
+                        with open(sc_path, 'r', encoding='utf-8') as f:
                             scenario_data = json.load(f)
-
+                        
                         if "initial_state" in scenario_data:
                             init_config = scenario_data["initial_state"]
-
+                            
                             if "staff_absent" in init_config:
                                 for staff_id in init_config["staff_absent"]:
                                     if staff_id in initial_state.staff:
                                         initial_state.staff[staff_id].is_present = False
                                         initial_state.staff[staff_id].is_busy = False
                                         initial_state.staff[staff_id].busy_until = 0
-
+                            
                             if "staff_present" in init_config:
                                 for staff_id in init_config["staff_present"]:
                                     if staff_id in initial_state.staff:
                                         initial_state.staff[staff_id].is_present = True
                                         initial_state.staff[staff_id].is_busy = False
                                         initial_state.staff[staff_id].busy_until = 0
-
+                            
                             if "capacities" in init_config:
                                 caps = init_config["capacities"]
                                 if "soins_critiques" in caps:
-                                    initial_state.soins_critiques.capacity = caps[
-                                        "soins_critiques"
-                                    ]
+                                    initial_state.soins_critiques.capacity = caps["soins_critiques"]
                                 if "salles" in caps:
                                     for room_id, cap in caps["salles"].items():
                                         if room_id in initial_state.waiting_rooms:
-                                            initial_state.waiting_rooms[
-                                                room_id
-                                            ].capacity = cap
-
+                                            initial_state.waiting_rooms[room_id].capacity = cap
+                        
                         save_state(initial_state, state_path)
                         st.session_state.hospital_state = initial_state
-
+                        
                         if "csv_session_id" in st.session_state:
                             del st.session_state.csv_session_id
-
-                        sc_name_clean = selected_scenario["filename"].replace(
-                            ".json", ""
-                        )
+                        
+                        sc_name_clean = selected_scenario['filename'].replace('.json', '')
                         st.session_state.csv_session_id = f"SCENARIO_{sc_name_clean}_{datetime.now().strftime('%H%M')}"
                         st.info(f"✓ Création CSV : {st.session_state.csv_session_id}")
                         ensure_csv_session_initialized(base_dir)
-
+                        
                         st.info("✓ Activation mode scénario...")
                         st.session_state.scenario_active = True
                         st.session_state.scenario_data = scenario_data
                         st.session_state.sim_time = 0
                         st.session_state.brain_logs = []
                         st.session_state.scenario_patient_counter = 1
-
+                        
                         # AUTO-DÉMARRAGE : Lancer simulation automatiquement
                         st.session_state.sim_running = True
-
-                        st.success(
-                            f"✅ Scénario chargé et démarré : {selected_scenario['title']}"
-                        )
+                        
+                        st.success(f"✅ Scénario chargé et démarré : {selected_scenario['title']}")
                         st.toast(f"🎭 Exécution automatique démarrée", icon="✅")
-
+                        
                         time.sleep(0.5)
                         st.rerun()
-
+                        
                     except Exception as e:
                         st.error(f"❌ Erreur : {e}")
                         import traceback
-
                         st.code(traceback.format_exc())
-
+            
             with col_stop:
                 if st.session_state.scenario_active:
-                    if st.button(
-                        "⏹️ Arrêter le Scénario",
-                        use_container_width=True,
-                        type="secondary",
-                    ):
+                    if st.button("⏹️ Arrêter le Scénario", use_container_width=True, type="secondary"):
                         # Arrêt INSTANTANÉ
                         st.session_state.scenario_active = False
                         st.session_state.scenario_data = None
                         st.session_state.sim_running = False  # ← STOPPE la simulation !
                         st.success("🛑 Scénario arrêté")
-                        st.rerun()
-
+                        # Forcer le rafraîchissement pour les stats temps réel
+        st.rerun()
+        
         if st.session_state.scenario_active:
-            st.warning(
-                "⚠️ **Mode Scénario Actif** - Les configurations manuelles sont désactivées. Cliquez sur 'Démarrer' pour lancer l'exécution automatique."
-            )
+            st.warning("⚠️ **Mode Scénario Actif** - Les configurations manuelles sont désactivées. Cliquez sur 'Démarrer' pour lancer l'exécution automatique.")
 
     # === VARIABLE DE VERROUILLAGE ===    # === VARIABLE DE VERROUILLAGE ===
     # Si le mode scénario est actif, on désactive les inputs manuels
@@ -975,8 +987,7 @@ def show_simulation() -> None:
 
     # === CAPACITÉS MODIFIABLES (VERROUILLÉ EN SCÉNARIO) ===
     with st.expander("⚙️ Configuration Capacités", expanded=False):
-        if disable_manual:
-            st.caption("🔒 Désactivé en mode Scénario")
+        if disable_manual: st.caption("🔒 Désactivé en mode Scénario")
         st.markdown("**🏥 Services Hospitaliers**")
         col1, col2, col3, col4 = st.columns(4)
 
@@ -987,7 +998,7 @@ def show_simulation() -> None:
                 max_value=50,
                 value=state.units["ortho"].capacity,
                 key="cap_ortho",
-                disabled=disable_manual,
+                disabled=disable_manual
             )
             if not disable_manual and new_cap_ortho != state.units["ortho"].capacity:
                 state.units["ortho"].capacity = new_cap_ortho
@@ -1000,7 +1011,7 @@ def show_simulation() -> None:
                 max_value=50,
                 value=state.units["cardio"].capacity,
                 key="cap_cardio",
-                disabled=disable_manual,
+                disabled=disable_manual
             )
             if not disable_manual and new_cap_cardio != state.units["cardio"].capacity:
                 state.units["cardio"].capacity = new_cap_cardio
@@ -1013,7 +1024,7 @@ def show_simulation() -> None:
                 max_value=50,
                 value=state.units["neuro"].capacity,
                 key="cap_neuro",
-                disabled=disable_manual,
+                disabled=disable_manual
             )
             if not disable_manual and new_cap_neuro != state.units["neuro"].capacity:
                 state.units["neuro"].capacity = new_cap_neuro
@@ -1026,7 +1037,7 @@ def show_simulation() -> None:
                 max_value=50,
                 value=state.units["pneumo"].capacity,
                 key="cap_pneumo",
-                disabled=disable_manual,
+                disabled=disable_manual
             )
             if not disable_manual and new_cap_pneumo != state.units["pneumo"].capacity:
                 state.units["pneumo"].capacity = new_cap_pneumo
@@ -1039,7 +1050,7 @@ def show_simulation() -> None:
             max_value=20,
             value=state.soins_critiques.capacity,
             key="cap_sc",
-            disabled=disable_manual,
+            disabled=disable_manual
         )
         if not disable_manual and new_cap_sc != state.soins_critiques.capacity:
             state.soins_critiques.capacity = new_cap_sc
@@ -1047,54 +1058,41 @@ def show_simulation() -> None:
 
     # === GESTION PERSONNEL (VERROUILLÉ EN SCÉNARIO) ===
     with st.expander("👥 Gestion Personnel", expanded=False):
-        if disable_manual:
-            st.caption("🔒 Désactivé en mode Scénario")
+        if disable_manual: st.caption("🔒 Désactivé en mode Scénario")
         cols = st.columns(3)
         with cols[0]:
             st.markdown("**🩺 Médecin**")
             d = state.staff.get("DOC_01")
             if d:
-                d.is_present = st.toggle(
-                    "DOC_01", value=d.is_present, key="t_doc", disabled=disable_manual
-                )
+                d.is_present = st.toggle("DOC_01", value=d.is_present, key="t_doc", disabled=disable_manual)
         with cols[1]:
             st.markdown("**💉 Infirmiers**")
             for s in ["INF_TRIAGE_01", "INF_SALLE_01", "INF_SALLE_02"]:
                 a = state.staff.get(s)
                 if a:
-                    a.is_present = st.toggle(
-                        s, value=a.is_present, key=f"t_{s}", disabled=disable_manual
-                    )
+                    a.is_present = st.toggle(s, value=a.is_present, key=f"t_{s}", disabled=disable_manual)
         with cols[2]:
             st.markdown("**🚑 AS**")
             for s in ["AS_01", "AS_02"]:
                 a = state.staff.get(s)
                 if a:
-                    a.is_present = st.toggle(
-                        s, value=a.is_present, key=f"t_{s}", disabled=disable_manual
-                    )
-
+                    a.is_present = st.toggle(s, value=a.is_present, key=f"t_{s}", disabled=disable_manual)
+        
         if st.button("💾 Sauvegarder Personnel", disabled=disable_manual):
             save_state(state, state_path)
             st.success("OK")
 
     # === INJECTION PATIENT (VERROUILLÉ EN SCÉNARIO) ===
     with st.expander("💉 Injection Patient", expanded=True):
-        if disable_manual:
-            st.caption("🔒 Désactivé en mode Scénario")
+        if disable_manual: st.caption("🔒 Désactivé en mode Scénario")
         c1, c2, c3, c4 = st.columns([2, 2, 2, 1])
         with c1:
             sev = st.selectbox(
-                "Gravité",
-                ["ROUGE", "JAUNE", "VERT", "GRIS"],
-                key="inj_sev",
-                disabled=disable_manual,
+                "Gravité", ["ROUGE", "JAUNE", "VERT", "GRIS"], key="inj_sev", disabled=disable_manual
             )
         with c2:
             symp_list = symptoms_data.get(sev, ["Symptôme"])
-            symp = st.selectbox(
-                "Symptôme", symp_list, key="inj_symp", disabled=disable_manual
-            )
+            symp = st.selectbox("Symptôme", symp_list, key="inj_symp", disabled=disable_manual)
         with c3:
             loc_opts = {
                 "Triage": "triage",
@@ -1107,18 +1105,13 @@ def show_simulation() -> None:
                 "→ Transport Hôpital (AS)": "transport_hospital",
             }
             loc_choice = st.selectbox(
-                "Destination",
-                list(loc_opts.keys()),
-                key="inj_loc",
-                disabled=disable_manual,
+                "Destination", list(loc_opts.keys()), key="inj_loc", disabled=disable_manual
             )
             loc_id = loc_opts[loc_choice]
         with c4:
             st.write("")
             st.write("")
-            if st.button(
-                "➕ Injecter", use_container_width=True, disabled=disable_manual
-            ):
+            if st.button("➕ Injecter", use_container_width=True, disabled=disable_manual):
                 pid, msg = inject_patient(state, sev, symp, loc_id, state_path)
                 if pid:
                     st.success(msg)
@@ -1135,7 +1128,8 @@ def show_simulation() -> None:
             use_container_width=True,
         ):
             st.session_state.sim_running = not st.session_state.sim_running
-            st.rerun()
+            # Forcer le rafraîchissement pour les stats temps réel
+        st.rerun()
     with c2:
         if st.button("🔄 Reset", use_container_width=True):
             # SAVE & ARCHIVE CSV
@@ -1155,7 +1149,7 @@ def show_simulation() -> None:
                 "sim_running",
                 "csv_session_id",
                 "used_patient_ids",
-                "scenario_active",  # Reset aussi le mode scénario
+                "scenario_active" # Reset aussi le mode scénario
             ]:
                 if key in st.session_state:
                     del st.session_state[key]
@@ -1164,7 +1158,8 @@ def show_simulation() -> None:
             st.session_state.sim_time = 0
             st.session_state.brain_logs = []
             st.session_state.sim_running = False
-            st.rerun()
+            # Forcer le rafraîchissement pour les stats temps réel
+        st.rerun()
     with c3:
         if st.button("💾 Export CSV", use_container_width=True):
             if "csv_session_id" in st.session_state:
@@ -1323,7 +1318,12 @@ def show_simulation() -> None:
 
     # === STATISTIQUES TEMPS RÉEL ===
     st.markdown("---")
-    st.markdown("## 📊 Statistiques Temps Réel (Données CSV complètes)")
+    
+    # Afficher un indicateur pendant que le CSV se remplit
+    if st.session_state.sim_time < 10:
+        st.info("📊 Statistiques en cours de génération... (premières données dans quelques secondes)")
+    else:
+        st.markdown("## 📊 Statistiques Temps Réel (Données CSV complètes)")
 
     fig1, fig2, fig3, fig4, fig5, fig6 = create_complete_statistics_charts(
         base_dir, state
@@ -1352,10 +1352,10 @@ def show_simulation() -> None:
         # === EXÉCUTION SCÉNARIO (CRITIQUE !) ===
         if st.session_state.scenario_active and st.session_state.scenario_data:
             actions_done = execute_scenario_timeline(
-                curr,
-                st.session_state.scenario_data,
-                st.session_state.sim_time,
-                base_dir,
+                curr, 
+                st.session_state.scenario_data, 
+                st.session_state.sim_time, 
+                base_dir
             )
             if actions_done:
                 save_state(curr, state_path)
@@ -1479,18 +1479,14 @@ def show_simulation() -> None:
             except Exception as e:
                 # Log l'erreur au lieu de la masquer
                 error_msg = f"[{st.session_state.sim_time//60}h{st.session_state.sim_time%60:02d}] ⚠️ Erreur LLM: {str(e)[:50]}"
-                if (
-                    not st.session_state.brain_logs
-                    or st.session_state.brain_logs[-1] != error_msg
-                ):
+                if not st.session_state.brain_logs or st.session_state.brain_logs[-1] != error_msg:
                     st.session_state.brain_logs.append(error_msg)
+        # Forcer le rafraîchissement pour les stats temps réel
         st.rerun()
-
 
 # =============================================================================
 # SYSTÈME RAG (Retrieval-Augmented Generation)
 # =============================================================================
-
 
 def load_rag_data(base_dir):
     """
@@ -1509,7 +1505,6 @@ def load_rag_data(base_dir):
         return df_patients, df_staff
     except:
         return None, None
-
 
 def build_rag_context(question, df_patients, df_staff):
     """
@@ -1578,7 +1573,6 @@ def build_rag_context(question, df_patients, df_staff):
 
     return "\n".join(context_parts)
 
-
 def get_current_state_summary(state):
     """
     Résumé de l'état actuel du système pour le contexte RAG
@@ -1621,11 +1615,9 @@ def get_current_state_summary(state):
 
     return "\n".join(summary)
 
-
 # =============================================================================
 # GUARDRAILS - RÈGLES DE SÉCURITÉ
 # =============================================================================
-
 
 def check_guardrails(action_request, state):
     """
@@ -1683,11 +1675,9 @@ def check_guardrails(action_request, state):
     # Si aucune règle violée
     return True, "✅ Action autorisée par les guardrails"
 
-
 # =============================================================================
 # FONCTION PRINCIPALE ASSISTANT IA
 # =============================================================================
-
 
 def process_ai_assistant_query(question, base_dir, state):
     """
@@ -1779,14 +1769,12 @@ GUARDRAILS ACTIFS:
     except Exception as e:
         return f"❌ Erreur LLM: {str(e)}"
 
-
 # =============================================================================
 # INTERFACE CHATBOT (À INTÉGRER DANS SIMULATION.PY)
 # =============================================================================
 
 # REMPLACE LA FONCTION show_ai_assistant_chat() dans simulation.py
 # Par cette version STICKY (toujours en bas)
-
 
 def show_ai_assistant_chat_inline(base_dir, state):
     """
@@ -1843,8 +1831,8 @@ def show_ai_assistant_chat_inline(base_dir, state):
             {"role": "assistant", "content": response}
         )
 
+        # Forcer le rafraîchissement pour les stats temps réel
         st.rerun()
-
 
 def show_ai_assistant_chat(base_dir, state):
     """
@@ -1936,4 +1924,5 @@ def show_ai_assistant_chat(base_dir, state):
             st.session_state.ai_chat_history.append(
                 {"role": "assistant", "content": response}
             )
-            st.rerun()
+            # Forcer le rafraîchissement pour les stats temps réel
+        st.rerun()
