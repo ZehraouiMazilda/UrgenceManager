@@ -1,90 +1,303 @@
-# UrgenceManager (Logistics Agent)
+<div align="center">
 
-## Description
-This academic project is developed as part of the *Data for Good* module and aims to design an agent-based assistant for emergency department logistics management.
+# Urgence Manager
 
-The objective is to propose an application capable of simulating the organization of an emergency department (patient flows, severity levels, waiting queues, available resources) and to provide an interactive interface that helps analyze and understand the system state using a language model.
+### *Gestion logistique agentique des urgences hospitalières*
 
-At this stage, the repository serves as a working base for the design, structuring, and progressive iteration of the project.
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
+[![LLM](https://img.shields.io/badge/LLM-RAG%20%7C%20Agent%20(encadr%C3%A9)-purple.svg)]()
+[![Santé](https://img.shields.io/badge/Application-Urgences%20hospitalières-red.svg)]()
+[![License](https://img.shields.io/badge/License-Académique-lightgrey.svg)]()
 
----
+*Projet de Master 2 SISE – Data Science*  
+*Université Lumière Lyon 2 | Année 2025–2026*
 
-## Project Objectives
-
-| Objective | Description |
-|---------|-------------|
-| Patient organization | Simulate and analyze patient organization based on severity levels and resource availability |
-| Decision support | Provide a synthetic view of the system state to identify bottlenecks |
-| Natural language interaction | Allow system interrogation through a language model |
-| System evaluation | Track business metrics and system variables |
-| Sobriety and justification | Design a reasoned and justifiable architecture |
+[Aperçu](#aperçu) • [Objectifs](#objectifs) • [Points-clés](#points-clés-du-projet) • [Architecture](#architecture-du-système) • [Machine-Learning](#machine-learning) • [LLM, RAG et Agent](#llm-rag-et-agent) • [Simulation & Interface](#simulation--interface)
 
 ---
 
-## Requirements Specification
+</div>
 
-### Expected Functional Components
+## Table des matières
 
-| Component | Description |
-|----------|-------------|
-| LLM | Use of a language model with a central role in the application |
-| RAG | Integration of at least one Retrieval-Augmented Generation component |
-| Agent-based logic | Implementation of an agent-based mechanism (workflow or MCP) |
-| Machine Learning | Integration of at least one machine learning component (classification, clustering, regression, etc.) |
-
----
-
-### Interface & Interaction
-
-| Requirement | Description |
-|------------|-------------|
-| User interface | Interactive application (e.g., Streamlit, Gradio) |
-| Hosting | Online access (HuggingFace Space or equivalent platform) |
-| Simulation | Simulated cases (automatically generated patients based on a context) |
-| Interaction | Manual patient addition and free interaction with the system |
+- [Aperçu](#aperçu)
+- [Objectifs](#objectifs)
+- [Points clés du projet](#points-clés-du-projet)
+- [Architecture du système](#architecture-du-système)
+- [Machine Learning](#machine-learning)
+- [LLM, RAG et Agent](#llm-rag-et-agent)
+- [Simulation & Interface](#simulation--interface)
+- [Métriques & Supervision](#métriques--supervision)
+- [Structure du projet](#structure-du-projet)
+- [Reproductibilité](#reproductibilité)
+- [Limites](#limites)
+- [Auteures](#auteures)
+- [Licence](#licence)
 
 ---
 
-### Dashboard & Monitoring
+## Aperçu
 
-| Tracked Element | Description |
-|----------------|-------------|
-| Business metrics | Waiting time, room saturation, patient distribution |
-| Latency | System response time |
-| Cost | Estimated costs related to model usage |
-| Environmental impact | Estimated ecological footprint |
+**Urgence Manager** est un projet académique consacré à la **gestion logistique et opérationnelle des flux de patients dans un service d’urgences hospitalières**, à l’aide d’une **architecture à base de règles**, complétée par :
 
----
+- des méthodes de **machine learning**,
+- des **modèles de langage (LLM)**,
+- un pipeline de **Retrieval-Augmented Generation (RAG)**,
+- et une **simulation interactive**.
 
-### Software Quality & Best Practices
+Les services d’urgences sont soumis à de fortes contraintes :
+ressources limitées, arrivées imprévisibles, niveaux de gravité hétérogènes, pression temporelle continue et dépendances aval (hospitalisation).
 
-| Aspect | Expectation |
-|------|-------------|
-| Typing | Variable and function typing |
-| Documentation | Documented functions and modules |
-| Formatting | Use of `black` |
-| Static analysis | Use of `pylint` |
-| Architecture | Object-oriented programming |
-| Design principles | Compliance with SOLID principles |
-| Deployment | Dockerization if relevant |
+L’objectif de ce projet est de concevoir un **assistant d’aide à la décision logistique**, capable de :
+
+- suivre l’état global d’un service d’urgences,
+- gérer les flux de patients et l’allocation des ressources,
+- détecter les situations critiques ou anormales,
+- **expliquer** les décisions et priorisations en langage naturel.
+
+Le système est conçu comme un **outil de support**, et non comme un substitut au jugement médical humain.
 
 ---
 
-### Expected Deliverables
+## Objectifs
 
-| Deliverable | Description |
-|------------|-------------|
-| Source code | Public GitHub repository |
-| Application | Online hosted interface |
-| Presentation | Oral project presentation |
+Le projet s’articule autour de trois objectifs complémentaires.
+
+### 1. Gestion logistique des flux
+
+- Modélisation explicite du parcours patient
+- Gestion de ressources limitées (salles, personnel, unités)
+- Détection des engorgements et goulets d’étranglement
+- Respect strict des contraintes organisationnelles et médicales
+
+### 2. Aide à la décision et explicabilité
+
+- Analyse de l’état courant du service
+- Interaction avec le système en langage naturel
+- Explication des priorités, blocages et risques identifiés
+- Traçabilité complète des décisions et événements
+
+### 3. IA responsable et sobre
+
+- Priorité aux règles métier lorsque possible
+- Utilisation ciblée du machine learning
+- Usage contrôlé et justifié des LLM
+- Séparation stricte entre **analyse** et **action**
 
 ---
 
-## Project Status
-🟡 **Design and scoping phase**  
-The project is currently in the design and structuring phase. Technical and architectural choices will be refined progressively as the project advances.
+## Points clés du projet
+
+- Modélisation explicite d’un service d’urgences sous forme d’état global
+- Moteur de règles déterministe indépendant de toute IA
+- Séparation claire entre :
+  - logique métier,
+  - machine learning,
+  - raisonnement et explication via LLM
+- Trois briques de machine learning complémentaires
+- Pipeline RAG fondé sur des règles explicites et des données factuelles
+- Distinction stricte entre **RAG (analyse)** et **Agent (action)**
+- Interface interactive de simulation et de supervision
+- Accent fort mis sur l’explicabilité et la reproductibilité
 
 ---
 
-## Authors
-Group project developed in an academic context.
+## Architecture du système
+
+Le système repose sur un **moteur central de simulation et de règles**, qui constitue la source de vérité du projet.
+
+- État global persistant (patients, personnel, salles, temps)
+- Règles métier explicites (priorités, capacités, mouvements)
+- Simulation du temps et des ressources
+- Journalisation complète des événements
+
+Les briques ML, RAG et Agent **ne contournent jamais ce moteur**.
+
+Une description détaillée du modèle sans IA est fournie dans :
+
+```
+docs/system_model.md
+```
+
+---
+
+## Machine Learning
+
+Le projet intègre **trois briques de machine learning**, chacune répondant à un besoin opérationnel distinct.
+
+### 1. Prédiction du temps d’attente
+
+Modèle de régression estimant le temps d’attente en fonction :
+- de la charge du service,
+- de la gravité des patients,
+- des ressources disponibles.
+
+### 2. Clustering des situations de surcharge
+
+Identification de motifs récurrents d’engorgement afin de :
+- caractériser les états de stress du service,
+- comparer des situations similaires.
+
+### 3. Classification du risque de blocage
+
+Prédiction du risque qu’un patient bloque des ressources aval
+(hospitalisation, soins critiques).
+
+---
+
+## LLM, RAG et Agent
+
+Les modèles de langage sont utilisés **de manière strictement encadrée**.
+
+### RAG (Retrieval-Augmented Generation)
+
+- Accès en lecture seule à :
+  - l’état courant,
+  - l’historique des événements,
+  - les règles explicites.
+- Utilisé uniquement pour :
+  - l’analyse,
+  - l’explication,
+  - la recommandation.
+
+Le LLM **ne modifie jamais l’état du système** en mode RAG.
+
+### Agent
+
+- Mode distinct et explicitement séparé
+- Capable de proposer et d’orchestrer des actions parmi des outils atomiques, sous validation explicite
+- Strictement contraint par les règles métier
+- Utilisé pour le pilotage expérimental du système
+
+👉 **Analyse ≠ Action** : cette séparation est un principe fondamental du projet.
+
+---
+
+## Simulation & Interface
+
+Une interface web interactive permet de :
+
+- injecter des patients avec différents niveaux de gravité,
+- observer l’évolution en temps réel du service,
+- déplacer ressources et patients selon les règles,
+- interagir avec le système via un chat explicatif,
+- rejouer des scénarios prédéfinis.
+
+L’application peut être exécutée localement ou déployée en ligne.
+
+---
+
+## Métriques & Supervision
+
+### Métriques métier
+
+- temps d’attente par gravité,
+- taux d’occupation des ressources,
+- fréquence et durée des congestions,
+- situations de boarding.
+
+### Métriques système
+
+- latence des appels LLM,
+- nombre d’appels,
+- estimation des coûts,
+- indicateurs d’impact environnemental (proxies).
+
+---
+
+## Structure du projet
+
+```text
+urgence-manager/
+│
+├── README.md
+├── LICENSE
+├── requirements.txt
+├── app.py                                        # Point d’entrée de l’application
+├── simulation.py                                 # Lancement de simulations simples
+├── scenarios.py                                  # Scénarios prédéfinis
+│
+├── data/
+│    ├── state/
+│    │    ├── urgence_initial_state.json          # État initial contrôlé
+│    │    ├── urgence_state.json                  # État courant persistant
+│    │    └── history_logs.json                   # Historique des événements
+│    │
+│    ├── historique/
+│    │    └── SESSION_*.csv                       # Traces complètes de simulations
+│    │
+│    └── symptoms.json                            # Données de symptômes (triage)
+│
+├── docs/                                         # Documentation
+│
+├── img/
+│
+├── src/
+│    ├── engine.py                                # Moteur central de règles (source de vérité)
+│    ├── models.py                                # Modèles métier (Patient, Staff, Room…)
+│    ├── tools.py                                 # Actions atomiques (transferts, décisions)
+│    ├── utils.py                                 # I/O, état, sérialisation
+│    ├── logger.py                                # Journalisation des événements
+│    ├── ai_brain.py                              # Interface raisonnement (LLM / RAG)
+│    │
+│    ├── triage/
+│    │    └── compute_severity.py                 # Calcul de la gravité (règles / heuristiques)
+│    │
+│    ├── agent/
+│    │    ├── urgency_agent.py
+│    │    └── llm_supervisor_mistral.py
+│    │
+│    ├── manager/
+│    │    └── urgency_manager_v1.py
+│    │
+│    ├── mcp/
+│    │    └── hospital_server.py                 # Orchestration / serveur de contrôle
+│    │
+│    └── views/
+│         ├── chat.py                             # Interface conversationnelle
+│         ├── context.py                          # Contexte transmis au LLM
+│         ├── simulation.py                       # Vue simulation
+│         ├── scenarios.py                        # Vue scénarios
+│         ├── stats.py                            # Statistiques et supervision
+│         └── about.py
+```
+
+## Reproductibilité
+
+- État initial contrôlé
+- Graines aléatoires fixées
+- Scénarios reproductibles
+- Logs exploitables a posteriori
+
+Le projet est conçu pour être **entièrement reproductible**.
+
+---
+
+## Limites
+
+Ce projet constitue un **prototype académique et pédagogique** :
+
+- Il ne pose aucun diagnostic médical,
+- Il ne remplace pas les professionnels de santé,
+- Il ne revendique aucune validité clinique.
+
+---
+
+## Auteures
+
+Lamia HATEM • Maissa LAJIMI • Aya MECHERI • Rina RAZAFIMAHEFA • Mazilda Zehraoui
+
+---
+
+## Licence
+
+Projet développé dans un cadre académique.  
+Usage éducatif et de recherche uniquement.
+
+---
+
+<div align="center">
+
+**Urgence Manager — Gestion logistique agentique des urgences hospitalières**
+
+</div>
