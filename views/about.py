@@ -1,15 +1,8 @@
-"""
-Page À Propos - VERSION FINALE (FIDÈLE AU README)
-Présentation de l'équipe, du contexte académique et technique.
-"""
-
 import streamlit as st
 import os
 
 def show_about():
-    # ==============================================================================
-    # 1. STYLE CSS
-    # ==============================================================================
+    
     st.markdown("""
     <style>
         .main-title {
@@ -69,9 +62,7 @@ def show_about():
     </style>
     """, unsafe_allow_html=True)
 
-    # ==============================================================================
     # 2. EN-TÊTE
-    # ==============================================================================
     
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
@@ -85,9 +76,7 @@ def show_about():
 
     st.divider()
 
-    # ==============================================================================
     # 3. CONTEXTE ACADÉMIQUE
-    # ==============================================================================
     
     st.markdown('<h2 class="section-header">🎓 Contexte du Projet</h2>', unsafe_allow_html=True)
     
@@ -121,9 +110,7 @@ def show_about():
         </div>
         """, unsafe_allow_html=True)
 
-    # ==============================================================================
-    # 4. STACK TECHNIQUE (Basé sur le code réel)
-    # ==============================================================================
+    # 4. STACK TECHNIQUE 
     
     st.divider()
     st.markdown('<h2 class="section-header">🛠️ Stack Technique</h2>', unsafe_allow_html=True)
@@ -175,9 +162,7 @@ def show_about():
         </div>
         """, unsafe_allow_html=True)
 
-    # ==============================================================================
     # 5. FOOTER & GITHUB
-    # ==============================================================================
     
     st.write("")
     st.write("")
@@ -200,3 +185,4 @@ def show_about():
 
 if __name__ == "__main__":
     show_about()
+
