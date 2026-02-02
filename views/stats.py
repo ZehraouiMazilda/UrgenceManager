@@ -20,6 +20,7 @@ import os
 from pathlib import Path
 from datetime import datetime, timedelta
 import json
+from typing import Tuple, Dict, Any
 
 # Machine Learning imports
 try:
@@ -29,7 +30,7 @@ try:
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.model_selection import train_test_split
     from sklearn.metrics import classification_report, confusion_matrix
-    ML_AVAILABLE = True
+    ML_AVAILABLE: bool = True
 except ImportError:
     ML_AVAILABLE = False
     st.warning("⚠️ scikit-learn non installé. Installez avec: pip install scikit-learn")
@@ -38,8 +39,8 @@ except ImportError:
 # CONFIGURATION
 # =============================================================================
 
-HISTORIQUE_DIR = Path("data/historique")
-COLORS = {
+HISTORIQUE_DIR: Path = Path("data/historique")
+COLORS: Dict[str, str] = {
     "ROUGE": "#DC2626",
     "JAUNE": "#FBBF24",
     "VERT": "#10B981",
@@ -51,18 +52,18 @@ COLORS = {
 # =============================================================================
 
 @st.cache_data(ttl=60)
-def load_all_sessions():
+def load_all_sessions() -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Charge toutes les sessions historiques depuis les CSV."""
     if not HISTORIQUE_DIR.exists():
         return pd.DataFrame(), pd.DataFrame()
     
-    all_patients = []
-    all_staff = []
+    all_patients: list[pd.DataFrame] = []
+    all_staff: list[pd.DataFrame] = []
     
     for csv_file in HISTORIQUE_DIR.glob("*_patients.csv"):
         try:
-            df = pd.read_csv(csv_file, sep=';')
-            session_id = csv_file.stem.replace("_patients", "")
+            df: pd.DataFrame = pd.read_csv(csv_file, sep=';')
+            session_id: str = csv_file.stem.replace("_patients", "")
             df['session_id'] = session_id
             all_patients.append(df)
         except Exception as e:
@@ -70,27 +71,27 @@ def load_all_sessions():
     
     for csv_file in HISTORIQUE_DIR.glob("*_staff.csv"):
         try:
-            df = pd.read_csv(csv_file, sep=';')
-            session_id = csv_file.stem.replace("_staff", "")
+            df: pd.DataFrame = pd.read_csv(csv_file, sep=';')
+            session_id: str = csv_file.stem.replace("_staff", "")
             df['session_id'] = session_id
             all_staff.append(df)
         except Exception as e:
             st.warning(f"Erreur lecture {csv_file.name}: {e}")
     
-    patients_df = pd.concat(all_patients, ignore_index=True) if all_patients else pd.DataFrame()
-    staff_df = pd.concat(all_staff, ignore_index=True) if all_staff else pd.DataFrame()
+    patients_df: pd.DataFrame = pd.concat(all_patients, ignore_index=True) if all_patients else pd.DataFrame()
+    staff_df: pd.DataFrame = pd.concat(all_staff, ignore_index=True) if all_staff else pd.DataFrame()
     
     return patients_df, staff_df
 
 
-def extract_session_info(session_id: str) -> dict:
+def extract_session_info(session_id: str) -> Dict[str, Any]:
     """Extrait les infos d'une session depuis son ID."""
     try:
-        parts = session_id.split("_")
-        start_date = datetime.strptime(parts[1], "%Y%m%d")
-        start_time = datetime.strptime(parts[2], "%H%M%S")
-        end_date = datetime.strptime(parts[3], "%Y%m%d")
-        end_time = datetime.strptime(parts[4], "%H%M%S")
+        parts: list[str] = session_id.split("_")
+        start_date: datetime = datetime.strptime(parts[1], "%Y%m%d")
+        start_time: datetime = datetime.strptime(parts[2], "%H%M%S")
+        end_date: datetime = datetime.strptime(parts[3], "%Y%m%d")
+        end_time: datetime = datetime.strptime(parts[4], "%H%M%S")
         
         return {
             "session_id": session_id,
@@ -99,7 +100,7 @@ def extract_session_info(session_id: str) -> dict:
             "duration": (datetime.combine(end_date.date(), end_time.time()) - 
                         datetime.combine(start_date.date(), start_time.time())).total_seconds() / 3600
         }
-    except:
+    except Exception:
         return {"session_id": session_id, "start": None, "end": None, "duration": 0}
 
 
@@ -107,65 +108,47 @@ def extract_session_info(session_id: str) -> dict:
 # MACHINE LEARNING : CLUSTERING DES ÉTATS DES URGENCES
 # =============================================================================
 
-def classify_emergency_state(df_patients: pd.DataFrame) -> dict:
+def classify_emergency_state(df_patients: pd.DataFrame) -> Dict[str, Any]:
     """
     Classifie l'état actuel des urgences en utilisant le clustering K-Means.
-    
-    États détectés:
-    - CALME : Peu de patients, bonne répartition
-    - NORMAL : Activité standard
-    - TENDU : Beaucoup de patients JAUNE/ROUGE
-    - CRITIQUE : Saturation, urgences vitales nombreuses
     """
     if df_patients.empty or not ML_AVAILABLE:
         return {"state": "UNKNOWN", "confidence": 0, "features": {}}
     
-    # Agréger les données par timestamp
-    agg = df_patients.groupby('timestamp').agg({
-        'id': 'nunique',  # Nombre de patients uniques
-        'severity': lambda x: (x == 'ROUGE').sum(),  # Nb ROUGE
+    agg: pd.DataFrame = df_patients.groupby('timestamp').agg({
+        'id': 'nunique',
+        'severity': lambda x: (x == 'ROUGE').sum(),
     }).reset_index()
     
     agg.columns = ['timestamp', 'nb_patients', 'nb_rouge']
     
-    # Calculer features supplémentaires
     agg['nb_jaune'] = df_patients[df_patients['severity'] == 'JAUNE'].groupby('timestamp').size().reindex(agg['timestamp'], fill_value=0).values
     agg['ratio_rouge'] = agg['nb_rouge'] / (agg['nb_patients'] + 1)
     
     if len(agg) < 4:
         return {"state": "INSUFFICIENT_DATA", "confidence": 0, "features": {}}
     
-    # Features pour le clustering
-    features = agg[['nb_patients', 'nb_rouge', 'nb_jaune', 'ratio_rouge']].fillna(0)
+    features: pd.DataFrame = agg[['nb_patients', 'nb_rouge', 'nb_jaune', 'ratio_rouge']].fillna(0)
+    scaler: StandardScaler = StandardScaler()
+    features_scaled: np.ndarray = scaler.fit_transform(features)
     
-    # Normalisation
-    scaler = StandardScaler()
-    features_scaled = scaler.fit_transform(features)
+    kmeans: KMeans = KMeans(n_clusters=4, random_state=42, n_init=10)
+    clusters: np.ndarray = kmeans.fit_predict(features_scaled)
     
-    # Clustering K-Means (4 états)
-    kmeans = KMeans(n_clusters=4, random_state=42, n_init=10)
-    clusters = kmeans.fit_predict(features_scaled)
+    current_cluster: int = clusters[-1]
+    cluster_centers: np.ndarray = kmeans.cluster_centers_
+    cluster_stats: np.ndarray = scaler.inverse_transform(cluster_centers)
     
-    # Identifier le cluster actuel (dernier timestamp)
-    current_cluster = clusters[-1]
+    intensity: np.ndarray = cluster_stats[:, 0] + cluster_stats[:, 1] * 2
+    sorted_clusters: np.ndarray = np.argsort(intensity)
     
-    # Interpréter les clusters
-    cluster_centers = kmeans.cluster_centers_
-    cluster_stats = scaler.inverse_transform(cluster_centers)
+    state_names: list[str] = ["CALME", "NORMAL", "TENDU", "CRITIQUE"]
+    cluster_to_state: dict[int, str] = {sorted_clusters[i]: state_names[i] for i in range(4)}
+    current_state: str = cluster_to_state[current_cluster]
     
-    # Trier les clusters par intensité (nb_patients + nb_rouge)
-    intensity = cluster_stats[:, 0] + cluster_stats[:, 1] * 2
-    sorted_clusters = np.argsort(intensity)
-    
-    state_names = ["CALME", "NORMAL", "TENDU", "CRITIQUE"]
-    cluster_to_state = {sorted_clusters[i]: state_names[i] for i in range(4)}
-    
-    current_state = cluster_to_state[current_cluster]
-    
-    # Calculer la confiance (distance au centre du cluster)
-    current_features = features_scaled[-1].reshape(1, -1)
-    distance = np.linalg.norm(current_features - cluster_centers[current_cluster])
-    confidence = max(0, 1 - distance / 3)  # Normalisation approximative
+    current_features: np.ndarray = features_scaled[-1].reshape(1, -1)
+    distance: float = np.linalg.norm(current_features - cluster_centers[current_cluster])
+    confidence: float = max(0, 1 - distance / 3)
     
     return {
         "state": current_state,
@@ -180,52 +163,38 @@ def classify_emergency_state(df_patients: pd.DataFrame) -> dict:
     }
 
 
-def predict_patient_outcome(df_patients: pd.DataFrame, df_staff: pd.DataFrame) -> dict:
+def predict_patient_outcome(df_patients: pd.DataFrame, df_staff: pd.DataFrame) -> Dict[str, Any]:
     """
     Prédit la probabilité de sortie vs hospitalisation pour les patients.
-    
-    Utilise un Random Forest Classifier entraîné sur l'historique.
     """
     if df_patients.empty or not ML_AVAILABLE:
         return {"model_accuracy": 0, "predictions": {}}
     
-    # Préparer les données d'entraînement
-    # Features: gravité, temps d'attente, nombre de transports
-    df = df_patients.copy()
-    
-    # Créer le target : 1 = hospitalisé, 0 = sorti
+    df: pd.DataFrame = df_patients.copy()
     df['outcome'] = df['location'].apply(lambda x: 1 if 'hos' in str(x).lower() or x in ['ortho', 'cardio', 'neuro', 'pneumo'] else 0)
     
-    # Features engineering
-    severity_map = {'ROUGE': 4, 'JAUNE': 3, 'VERT': 2, 'GRIS': 1}
+    severity_map: dict[str, int] = {'ROUGE': 4, 'JAUNE': 3, 'VERT': 2, 'GRIS': 1}
     df['severity_score'] = df['severity'].map(severity_map).fillna(0)
     
-    # Compter les transports par patient
-    transport_count = df.groupby('id').size().to_dict()
+    transport_count: dict[Any, int] = df.groupby('id').size().to_dict()
     df['nb_transports'] = df['id'].map(transport_count)
     
-    # Filtrer les données valides
-    df_valid = df[['severity_score', 'timestamp', 'nb_transports', 'outcome']].dropna()
+    df_valid: pd.DataFrame = df[['severity_score', 'timestamp', 'nb_transports', 'outcome']].dropna()
     
     if len(df_valid) < 20:
         return {"model_accuracy": 0, "predictions": {}, "error": "Données insuffisantes"}
     
-    # Split train/test
-    X = df_valid[['severity_score', 'timestamp', 'nb_transports']]
-    y = df_valid['outcome']
-    
+    X: pd.DataFrame = df_valid[['severity_score', 'timestamp', 'nb_transports']]
+    y: pd.Series = df_valid['outcome']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
     
-    # Entraîner le modèle
-    clf = RandomForestClassifier(n_estimators=50, random_state=42, max_depth=5)
+    clf: RandomForestClassifier = RandomForestClassifier(n_estimators=50, random_state=42, max_depth=5)
     clf.fit(X_train, y_train)
     
-    # Évaluer
-    accuracy = clf.score(X_test, y_test)
-    y_pred = clf.predict(X_test)
+    accuracy: float = clf.score(X_test, y_test)
+    y_pred: np.ndarray = clf.predict(X_test)
     
-    # Importance des features
-    feature_importance = dict(zip(['Gravité', 'Temps', 'Nb Transports'], clf.feature_importances_))
+    feature_importance: dict[str, float] = dict(zip(['Gravité', 'Temps', 'Nb Transports'], clf.feature_importances_))
     
     return {
         "model_accuracy": accuracy,
@@ -239,23 +208,16 @@ def predict_patient_outcome(df_patients: pd.DataFrame, df_staff: pd.DataFrame) -
 # MONITORING SYSTÈME
 # =============================================================================
 
-def calculate_system_metrics(df_patients: pd.DataFrame, df_staff: pd.DataFrame) -> dict:
-    """Calcule les métriques système (latence, coût, etc.)."""
+def calculate_system_metrics(df_patients: pd.DataFrame, df_staff: pd.DataFrame) -> Dict[str, Any]:
+    nb_cycles: int = len(df_patients['timestamp'].unique())
+    avg_latency_ms: float = 250 + (nb_cycles * 2)
+    estimated_tokens: int = nb_cycles * 1000
+    estimated_cost_usd: float = (estimated_tokens / 1000) * 0.002
     
-    # Simulation de latence API (basée sur le nombre d'appels)
-    nb_cycles = len(df_patients['timestamp'].unique())
-    avg_latency_ms = 250 + (nb_cycles * 2)  # Augmente avec la charge
-    
-    # Estimation du coût API Mistral
-    # Approximation : 1000 tokens par cycle, $0.002 par 1000 tokens
-    estimated_tokens = nb_cycles * 1000
-    estimated_cost_usd = (estimated_tokens / 1000) * 0.002
-    
-    # Temps de réponse moyen du système
     if not df_patients.empty:
-        df_patients_sorted = df_patients.sort_values('timestamp')
-        time_diffs = df_patients_sorted.groupby('id')['timestamp'].apply(lambda x: x.diff().mean()).dropna()
-        avg_response_time = time_diffs.mean() if len(time_diffs) > 0 else 0
+        df_patients_sorted: pd.DataFrame = df_patients.sort_values('timestamp')
+        time_diffs: pd.Series = df_patients_sorted.groupby('id')['timestamp'].apply(lambda x: x.diff().mean()).dropna()
+        avg_response_time: float = time_diffs.mean() if len(time_diffs) > 0 else 0
     else:
         avg_response_time = 0
     
@@ -266,7 +228,7 @@ def calculate_system_metrics(df_patients: pd.DataFrame, df_staff: pd.DataFrame) 
         "estimated_cost_usd": estimated_cost_usd,
         "estimated_tokens": estimated_tokens,
         "avg_response_time_min": avg_response_time,
-        "uptime_percent": 99.5  # Simulé
+        "uptime_percent": 99.5
     }
 
 
@@ -274,49 +236,41 @@ def calculate_system_metrics(df_patients: pd.DataFrame, df_staff: pd.DataFrame) 
 # MONITORING MÉTIER
 # =============================================================================
 
-def calculate_business_metrics(df_patients: pd.DataFrame, df_staff: pd.DataFrame) -> dict:
-    """Calcule les indicateurs métier hospitaliers."""
-    
+def calculate_business_metrics(df_patients: pd.DataFrame, df_staff: pd.DataFrame) -> Dict[str, Any]:
     if df_patients.empty:
         return {}
     
-    # KPI 1 : Temps d'attente moyen par gravité
-    wait_times = {}
+    wait_times: dict[str, float] = {}
     for severity in ['ROUGE', 'JAUNE', 'VERT', 'GRIS']:
-        patients_sev = df_patients[df_patients['severity'] == severity]
+        patients_sev: pd.DataFrame = df_patients[df_patients['severity'] == severity]
         if not patients_sev.empty:
-            # Temps entre arrivée (premier timestamp) et sortie (dernier timestamp)
-            times = patients_sev.groupby('id')['timestamp'].agg(['min', 'max'])
+            times: pd.DataFrame = patients_sev.groupby('id')['timestamp'].agg(['min', 'max'])
             times['duration'] = times['max'] - times['min']
             wait_times[severity] = times['duration'].mean()
         else:
             wait_times[severity] = 0
     
-    # KPI 2 : Taux d'hospitalisation par gravité
-    hospitalization_rates = {}
+    hospitalization_rates: dict[str, float] = {}
     for severity in ['ROUGE', 'JAUNE', 'VERT', 'GRIS']:
-        patients_sev = df_patients[df_patients['severity'] == severity]
+        patients_sev: pd.DataFrame = df_patients[df_patients['severity'] == severity]
         if not patients_sev.empty:
-            hospitalized = patients_sev[patients_sev['location'].str.contains('hos|ortho|cardio|neuro|pneumo', na=False)]
-            rate = len(hospitalized['id'].unique()) / len(patients_sev['id'].unique())
+            hospitalized: pd.DataFrame = patients_sev[patients_sev['location'].str.contains('hos|ortho|cardio|neuro|pneumo', na=False)]
+            rate: float = len(hospitalized['id'].unique()) / len(patients_sev['id'].unique())
             hospitalization_rates[severity] = rate
         else:
             hospitalization_rates[severity] = 0
     
-    # KPI 3 : Utilisation du personnel
+    staff_utilization: float
     if not df_staff.empty:
-        total_time = df_staff['timestamp'].max() - df_staff['timestamp'].min()
-        busy_time = df_staff[df_staff['patient_handling_id'].notna()]['timestamp'].nunique()
+        total_time: float = df_staff['timestamp'].max() - df_staff['timestamp'].min()
+        busy_time: int = df_staff[df_staff['patient_handling_id'].notna()]['timestamp'].nunique()
         staff_utilization = (busy_time / total_time) * 100 if total_time > 0 else 0
     else:
         staff_utilization = 0
     
-    # KPI 4 : Nombre de patients par parcours
-    parcours = df_patients.groupby('id')['location'].apply(lambda x: ' -> '.join(x.unique())).value_counts()
-    
-    # KPI 5 : Taux de satisfaction simulé (basé sur temps d'attente)
-    avg_wait = sum(wait_times.values()) / len(wait_times) if wait_times else 0
-    satisfaction_score = max(0, 100 - (avg_wait / 10))  # Diminue avec le temps d'attente
+    parcours: pd.Series = df_patients.groupby('id')['location'].apply(lambda x: ' -> '.join(x.unique())).value_counts()
+    avg_wait: float = sum(wait_times.values()) / len(wait_times) if wait_times else 0
+    satisfaction_score: float = max(0, 100 - (avg_wait / 10))
     
     return {
         "wait_times": wait_times,
@@ -327,11 +281,10 @@ def calculate_business_metrics(df_patients: pd.DataFrame, df_staff: pd.DataFrame
         "top_parcours": parcours.head(5).to_dict() if not parcours.empty else {}
     }
 
-
 # =============================================================================
 # VISUALISATIONS
 # =============================================================================
-def plot_emergency_state_evolution(df_patients: pd.DataFrame):
+def plot_emergency_state_evolution(df_patients: pd.DataFrame) -> None:
     """Graphique d'évolution de l'état des urgences."""
     if df_patients.empty or not ML_AVAILABLE:
         st.info("Pas assez de données pour afficher l'évolution.")
@@ -424,7 +377,7 @@ def plot_emergency_state_evolution(df_patients: pd.DataFrame):
     st.plotly_chart(fig, use_container_width=True)
 
 
-def plot_staff_utilization(df_staff: pd.DataFrame):
+def plot_staff_utilization(df_staff: pd.DataFrame) -> None:
     """Heatmap unique d'utilisation des infirmiers et aides-soignants avec scroll horizontal simple."""
     if df_staff.empty:
         st.info("Pas de données staff disponibles.")
@@ -488,7 +441,7 @@ def plot_staff_utilization(df_staff: pd.DataFrame):
 
     st.plotly_chart(fig, use_container_width=True)
 
-def plot_patient_flow_sankey(df_patients: pd.DataFrame):
+def plot_patient_flow_sankey(df_patients: pd.DataFrame) -> None:
     """Diagramme Sankey des flux de patients amélioré, clair et grand."""
     if df_patients.empty:
         st.info("Pas de données patients disponibles.")
@@ -559,7 +512,7 @@ def plot_patient_flow_sankey(df_patients: pd.DataFrame):
     ))
 
     fig.update_layout(
-        title_text="📊 Flux de Patients dans le Service (Clair et Agrandi)",
+        title_text="📊 Flux de Patients dans le Service",
         height=900,
         margin=dict(l=150, r=150, t=150, b=150)
     )
@@ -570,7 +523,7 @@ def plot_patient_flow_sankey(df_patients: pd.DataFrame):
 # PAGE PRINCIPALE
 # =============================================================================
 
-def main():
+def main() -> None:
     #st.set_page_config(page_title="📊 Statistiques & Monitoring", layout="wide")
     
     st.title("📊 Statistiques Avancées & Monitoring")
