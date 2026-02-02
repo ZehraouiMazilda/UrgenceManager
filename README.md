@@ -31,7 +31,7 @@
 - [Structure du projet](#structure-du-projet)
 - [Reproductibilité](#reproductibilité)
 - [Limites](#limites)
-- [Auteures](#auteures)
+- [Autrices](#autrices)
 - [Licence](#licence)
 
 ---
@@ -314,7 +314,7 @@ Ce projet constitue un **prototype académique et pédagogique** :
 
 ---
 
-## Auteures
+## Autrices
 
 Lamia HATEM • Maissa LAJIMI • Aya MECHERI • Rina RAZAFIMAHEFA • Mazilda Zehraoui
 
