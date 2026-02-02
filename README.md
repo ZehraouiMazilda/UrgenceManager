@@ -263,8 +263,6 @@ urgence-manager/
 ├── LICENSE
 ├── requirements.txt
 ├── app.py                                        # Point d'entrée de l'application
-├── simulation.py                                 # Lancement de simulations simples
-├── scenarios.py                                  # Scénarios prédéfinis
 │
 ├── data/
 │    ├── state/
@@ -282,31 +280,15 @@ urgence-manager/
 ├── img/
 │
 └── src/
-     ├── engine.py                                # Moteur central de règles (source de vérité)
      ├── models.py                                # Modèles métier (Patient, Staff, Room…)
      ├── tools.py                                 # Actions atomiques (transferts, décisions)
      ├── utils.py                                 # I/O, état, sérialisation
      ├── logger.py                                # Journalisation des événements
      ├── ai_brain.py                              # Interface raisonnement (LLM / RAG)
      │
-     ├── triage/
-     │    └── compute_severity.py                 # Calcul de la gravité (règles / heuristiques)
-     │
-     ├── agent/
-     │    ├── urgency_agent.py
-     │    └── llm_supervisor_mistral.py
-     │
-     ├── manager/
-     │    └── urgency_manager_v1.py
-     │
-     ├── mcp/
-     │    └── hospital_server.py                 # Orchestration / serveur de contrôle
-     │
      └── views/
-          ├── chat.py                             # Interface conversationnelle
           ├── context.py                          # Contexte transmis au LLM
           ├── simulation.py                       # Vue simulation
-          ├── scenarios.py                        # Vue scénarios
           ├── stats.py                            # Statistiques et supervision
           └── about.py
 ```
