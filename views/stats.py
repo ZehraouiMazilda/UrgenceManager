@@ -331,69 +331,108 @@ def calculate_business_metrics(df_patients: pd.DataFrame, df_staff: pd.DataFrame
 # =============================================================================
 # VISUALISATIONS
 # =============================================================================
-
 def plot_emergency_state_evolution(df_patients: pd.DataFrame):
     """Graphique d'évolution de l'état des urgences."""
     if df_patients.empty or not ML_AVAILABLE:
         st.info("Pas assez de données pour afficher l'évolution.")
         return
-    
-    # Calculer l'état à chaque timestamp
+
     timestamps = sorted(df_patients['timestamp'].unique())
     states = []
-    
-    for ts in timestamps[::10]:  # Échantillonner pour éviter le surcoût
+
+    for ts in timestamps[::10]:  # échantillonnage
         df_subset = df_patients[df_patients['timestamp'] <= ts]
+
+        # État ML (inchangé)
         result = classify_emergency_state(df_subset)
+
+        # Comptage métier par gravité
+        counts = df_subset.groupby('severity')['id'].nunique()
+
         states.append({
             'timestamp': ts,
             'state': result['state'],
-            'nb_patients': result['features'].get('nb_patients', 0),
-            'nb_rouge': result['features'].get('nb_rouge', 0)
+            'ROUGE': counts.get('ROUGE', 0),
+            'JAUNE': counts.get('JAUNE', 0),
+            'VERT': counts.get('VERT', 0),
+            'GRIS': counts.get('GRIS', 0),
         })
-    
+
     df_states = pd.DataFrame(states)
-    
-    # Graphique avec Plotly
+
+    # Graphique Plotly
     fig = make_subplots(
         rows=2, cols=1,
-        subplot_titles=("État des Urgences", "Patients ROUGE"),
-        vertical_spacing=0.15
+        subplot_titles=("État des Urgences", "Patients par Gravité"),
+        vertical_spacing=0.15,
+        shared_xaxes=True
     )
-    
-    # Convertir état en numérique pour le graphique
+
+    # Mapping état → numérique
     state_to_num = {"CALME": 1, "NORMAL": 2, "TENDU": 3, "CRITIQUE": 4}
     df_states['state_num'] = df_states['state'].map(state_to_num)
-    
+
+    # ---- Ligne état global ----
     fig.add_trace(
-        go.Scatter(x=df_states['timestamp'], y=df_states['state_num'],
-                  mode='lines+markers', name='État',
-                  line=dict(color='royalblue', width=3)),
+        go.Scatter(
+            x=df_states['timestamp'],
+            y=df_states['state_num'],
+            mode='lines+markers',
+            name='État',
+            line=dict(color='royalblue', width=3)
+        ),
         row=1, col=1
     )
-    
-    fig.add_trace(
-        go.Bar(x=df_states['timestamp'], y=df_states['nb_rouge'],
-              name='Patients ROUGE', marker_color='red'),
-        row=2, col=1
+
+    # ---- Barres empilées par gravité ----
+    severity_colors = {
+        'ROUGE': 'red',
+        'JAUNE': 'orange',
+        'VERT': 'green',
+        'GRIS': 'lightgrey'
+    }
+
+    for severity in ['ROUGE', 'JAUNE', 'VERT', 'GRIS']:
+        fig.add_trace(
+            go.Bar(
+                x=df_states['timestamp'],
+                y=df_states[severity],
+                name=severity,
+                marker_color=severity_colors[severity]
+            ),
+            row=2, col=1
+        )
+
+    # Axes
+    fig.update_yaxes(
+        title_text="État",
+        ticktext=["CALME", "NORMAL", "TENDU", "CRITIQUE"],
+        tickvals=[1, 2, 3, 4],
+        row=1, col=1
     )
-    
-    fig.update_yaxes(title_text="État", ticktext=["CALME", "NORMAL", "TENDU", "CRITIQUE"], 
-                     tickvals=[1, 2, 3, 4], row=1, col=1)
-    fig.update_yaxes(title_text="Nombre", row=2, col=1)
+
+    fig.update_yaxes(title_text="Nombre de patients", row=2, col=1)
     fig.update_xaxes(title_text="Temps (min)", row=2, col=1)
-    
-    fig.update_layout(height=600, showlegend=True, title_text="Machine Learning : Classification de l'État")
-    
+
+    fig.update_layout(
+        height=650,
+        barmode='stack',
+        showlegend=True,
+        title_text="Machine Learning : Classification de l'État des Urgences"
+    )
+
     st.plotly_chart(fig, use_container_width=True)
 
 
 def plot_staff_utilization(df_staff: pd.DataFrame):
-    """Heatmap d'utilisation du personnel."""
+    """Heatmap unique d'utilisation des infirmiers et aides-soignants avec scroll horizontal simple."""
     if df_staff.empty:
         st.info("Pas de données staff disponibles.")
         return
-    
+
+    # Supprimer INF_TRIAGE_01
+    df_staff = df_staff[df_staff['id'] != "INF_TRIAGE_01"]
+
     # Agréger par staff et par heure
     df_staff['hour'] = (df_staff['timestamp'] // 60).astype(int)
     
@@ -412,79 +451,120 @@ def plot_staff_utilization(df_staff: pd.DataFrame):
             })
     
     df_heatmap = pd.DataFrame(heatmap_data)
-    
+
     # Pivot pour la heatmap
     pivot = df_heatmap.pivot(index='staff', columns='hour', values='utilization').fillna(0)
-    
+
+    # Heatmap
     fig = go.Figure(data=go.Heatmap(
         z=pivot.values,
         x=pivot.columns,
         y=pivot.index,
-        colorscale='RdYlGn_r',
+        colorscale='Viridis',
+        zmin=0,
+        zmax=100,
         text=pivot.values.round(1),
         texttemplate='%{text}%',
         textfont={"size": 10},
-        colorbar=dict(title="Utilisation (%)")
+        colorbar=dict(title="Utilisation (%)"),
+        hoverongaps=False
     ))
-    
+
+    # Limiter l'affichage initial à 30 heures et permettre le scroll horizontal
+    max_visible_hours = 30
+    x_max = min(max_visible_hours, len(pivot.columns))
     fig.update_layout(
-        title="Heatmap : Utilisation du Personnel par Heure",
+        title="Heatmap : Utilisation des Infirmiers et Aides-Soignants dans le Service",
         xaxis_title="Heure",
         yaxis_title="Personnel",
-        height=400
+        height=500,
+        margin=dict(l=100, r=50, t=80, b=50),
+        xaxis=dict(
+            range=[-0.5, x_max - 0.5],
+            fixedrange=False,  # Autorise le défilement horizontal
+            showgrid=True
+        )
     )
-    
+
     st.plotly_chart(fig, use_container_width=True)
 
-
 def plot_patient_flow_sankey(df_patients: pd.DataFrame):
-    """Diagramme Sankey des flux de patients."""
+    """Diagramme Sankey des flux de patients amélioré, clair et grand."""
     if df_patients.empty:
         st.info("Pas de données patients disponibles.")
         return
-    
+
+    # Mapping des abréviations vers un texte clair
+    location_mapping = {
+        "TRIAGE": "Accueil / Triage",
+        "INF_TRIAGE_01": "Infirmier Triage",
+        "ORT": "Orthopédie",
+        "CARDIO": "Cardiologie",
+        "NEURO": "Neurologie",
+        "PNEUMO": "Pneumologie",
+        "URGENCE": "Salle d'Urgence",
+        "OBS": "Observation",
+        "CHIR": "Chirurgie",
+        "SORTIE": "Sortie / Domicile"
+    }
+
     # Construire les transitions
     transitions = []
     for patient_id in df_patients['id'].unique():
         patient_data = df_patients[df_patients['id'] == patient_id].sort_values('timestamp')
-        locations = patient_data['location'].tolist()
-        
+        locations = [location_mapping.get(loc, loc) for loc in patient_data['location'].tolist()]
         for i in range(len(locations) - 1):
             source = locations[i]
             target = locations[i + 1]
             transitions.append({'source': source, 'target': target})
-    
+
     df_transitions = pd.DataFrame(transitions)
-    
+
     # Compter les flux
     flow_counts = df_transitions.groupby(['source', 'target']).size().reset_index(name='value')
-    
-    # Créer les nœuds uniques
+
+    # Nœuds uniques
     all_locations = pd.concat([flow_counts['source'], flow_counts['target']]).unique()
     node_dict = {loc: i for i, loc in enumerate(all_locations)}
-    
-    # Mapper les indices
     flow_counts['source_idx'] = flow_counts['source'].map(node_dict)
     flow_counts['target_idx'] = flow_counts['target'].map(node_dict)
-    
-    fig = go.Figure(data=[go.Sankey(
+
+    # Couleurs des liens selon volume
+    max_value = flow_counts['value'].max()
+    link_colors = [
+        f'rgba(31, 119, 180, {0.3 + 0.7 * (v / max_value)})' for v in flow_counts['value']
+    ]
+
+    # Couleurs des nœuds
+    node_colors = px.colors.qualitative.Pastel
+    node_colors = [node_colors[i % len(node_colors)] for i in range(len(all_locations))]
+
+    # Sankey
+    fig = go.Figure(go.Sankey(
+        arrangement="snap",
         node=dict(
-            pad=15,
-            thickness=20,
+            pad=40,          # plus d'espacement vertical
+            thickness=50,    # nœuds plus gros
+            line=dict(color="black", width=1),
             label=all_locations,
-            color="lightblue"
+            color=node_colors
         ),
         link=dict(
             source=flow_counts['source_idx'],
             target=flow_counts['target_idx'],
-            value=flow_counts['value']
+            value=flow_counts['value'],
+            color=link_colors,
+            hovertemplate='%{source.label} → %{target.label}<br>Patients: %{value}<extra></extra>'
         )
-    )])
-    
-    fig.update_layout(title="Flux de Patients (Diagramme Sankey)", height=600)
-    
-    st.plotly_chart(fig, use_container_width=True)
+    ))
 
+    fig.update_layout(
+        title_text="📊 Flux de Patients dans le Service (Clair et Agrandi)",
+        height=900,
+        margin=dict(l=150, r=150, t=150, b=150)
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
 
 # =============================================================================
 # PAGE PRINCIPALE
