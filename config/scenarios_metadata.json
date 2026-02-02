@@ -1,0 +1,50 @@
+{
+  "test_1_as_24h.json": {
+    "title": "🎯 Test d'Optimisation : Personnel Minimal (1 AS)",
+    "description": "Évalue la priorisation avec seulement DOC_01 et AS_01. Violations de surveillance attendues.",
+    "duration": "24 heures",
+    "difficulty": "Expert"
+  },
+  "test_priorites_24h.json": {
+    "title": "🚨 Validation des Priorités : ROUGE > JAUNE > VERT",
+    "description": "Vérifie que le système respecte strictement la hiérarchie des urgences.",
+    "duration": "24 heures",
+    "difficulty": "Intermédiaire"
+  },
+  "test_surveillance_24h.json": {
+    "title": "👁️ Contrôle de Surveillance : Règle des 15 Minutes",
+    "description": "Teste le respect du protocole de surveillance (max 15 min sans personnel).",
+    "duration": "24 heures",
+    "difficulty": "Avancé"
+  },
+  "test_inf_triage_as_24h.json": {
+    "title": "🏥 Personnel Triage + AS : Gestion Sans Surveillance Salles",
+    "description": "Évalue l'impact d'avoir uniquement une infirmière au triage.",
+    "duration": "24 heures",
+    "difficulty": "Avancé"
+  },
+  "test_1_inf_salle_24h.json": {
+    "title": "🔄 Rotation Infirmière : Optimisation 3 Salles",
+    "description": "Une seule infirmière doit gérer 3 salles d'attente en rotation.",
+    "duration": "24 heures",
+    "difficulty": "Expert"
+  },
+  "test_saturation_sc_24h.json": {
+    "title": "⚠️ Saturation des Soins Critiques : Gestion du Boarding",
+    "description": "Teste le comportement quand les soins critiques sont pleins.",
+    "duration": "24 heures",
+    "difficulty": "Avancé"
+  },
+  "test_parfait_24h.json": {
+    "title": "✨ Scénario de Référence : Configuration Optimale",
+    "description": "Personnel complet, pas de violations. Sert de baseline pour comparaisons.",
+    "duration": "24 heures",
+    "difficulty": "Standard"
+  },
+  "test_critique_24h.json": {
+    "title": "🔥 Test Ultime : Stress Maximum",
+    "description": "Personnel minimal + flux intense. Le test le plus difficile.",
+    "duration": "24 heures",
+    "difficulty": "Extrême"
+  }
+}

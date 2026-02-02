@@ -24,12 +24,10 @@ with st.sidebar:
     page_selection = st.radio(
         "Navigation",
         [
-            "🏠 Accueil & Contexte",
-            "🎬 Scénarios",
-            "🎮 Simulateur Live",
-            "💬 Assistant IA",
-            "📊 Dashboard & KPIs",
-            "ℹ️ À Propos",
+            "Accueil & Contexte",
+            "Simulateur Live",
+            "Dashboard & KPIs",
+            "À Propos",
         ],
         index=2,  # On met le simulateur par défaut pour gagner du temps
     )
