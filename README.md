@@ -183,11 +183,11 @@ Une interface web interactive permet de :
 - interagir avec le système via un chat explicatif,
 - rejouer des scénarios prédéfinis.
 
+---
+
 ### Application en ligne
 
-Une version déployée de l'application est accessible en ligne à l'adresse suivante :
-
-[UrgenceManager](https://urgencemanager-7puxneqxo5jsbeuayzjbey.streamlit.app/)
+Une version déployée de l'application est accessible en ligne à l'adresse suivante : [UrgenceManager](https://urgencemanager-7puxneqxo5jsbeuayzjbey.streamlit.app/)
 
 Elle permet de lancer des simulations, d'observer l'évolution du système en temps réel et d'interagir avec le moteur via l'interface de chat.
 
