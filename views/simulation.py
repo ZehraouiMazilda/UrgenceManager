@@ -1004,7 +1004,7 @@ def show_simulation():
         if st.session_state.scenario_active:
             st.warning("⚠️ **Mode Scénario Actif** - Les configurations manuelles sont désactivées. Cliquez sur 'Démarrer' pour lancer l'exécution automatique.")
 
-    # === VARIABLE DE VERROUILLAGE ===    # === VARIABLE DE VERROUILLAGE ===
+    # === VARIABLE DE VERROUILLAGE ===
     # Si le mode scénario est actif, on désactive les inputs manuels
     disable_manual = st.session_state.scenario_active
 
@@ -1796,11 +1796,8 @@ GUARDRAILS ACTIFS:
         return f"❌ Erreur LLM: {str(e)}"
 
 # =============================================================================
-# INTERFACE CHATBOT (À INTÉGRER DANS SIMULATION.PY)
+# INTERFACE CHATBOT
 # =============================================================================
-
-# REMPLACE LA FONCTION show_ai_assistant_chat() dans simulation.py
-# Par cette version STICKY (toujours en bas)
 
 def show_ai_assistant_chat_inline(base_dir, state):
     """
@@ -1950,3 +1947,4 @@ def show_ai_assistant_chat(base_dir, state):
                 {"role": "assistant", "content": response}
             )
             st.rerun()
+
