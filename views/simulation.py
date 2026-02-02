@@ -765,76 +765,7 @@ def show_simulation() -> None:
 
     state = st.session_state.hospital_state
 
-    # === INTRO ÉLÉGANTE ===
-    st.markdown("# 🏥 Simulateur et Régulateur d'Urgences")
-    
-    st.markdown("""
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                padding: 20px; border-radius: 10px; color: white; margin-bottom: 20px;">
-        <h3 style="margin-top: 0; color: white;">Système Intelligent de Gestion des Urgences</h3>
-        <p style="margin-bottom: 0;">
-            Simulez et optimisez le flux de patients dans un service d'urgences avec l'assistance 
-            d'une intelligence artificielle. Testez différents scénarios, analysez les performances 
-            et validez le respect des protocoles de sécurité.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Guide d'utilisation complet
-    with st.expander("📖 Guide d'Utilisation - Comment ça marche ?", expanded=False):
-        st.markdown("""
-        ### 🎮 Modes de Simulation
-        
-        Le simulateur propose **deux modes** d'utilisation :
-        
-        #### 1️⃣ Mode Scénarios Automatiques (Recommandé)
-        
-        **Objectif :** Tester le système dans des conditions prédéfinies
-        
-        **Comment l'utiliser :**
-        1. Ouvrez l'expander **"🎭 Scénarios de Test Prédéfinis"**
-        2. Sélectionnez un scénario dans la liste déroulante
-        3. Lisez la description et les objectifs
-        4. Cliquez sur **"🚀 Lancer le Scénario"**
-        5. ✅ La simulation démarre **automatiquement** !
-        6. Observez l'exécution en temps réel
-        
-        **Note importante :** Une fois le scénario lancé, les injections de patients se font 
-        automatiquement selon le planning prédéfini. Vous n'avez qu'à observer !
-        
-        ---
-        
-        ### 📚 Types de Scénarios Disponibles
-        
-        - **🎯 Tests d'Optimisation** : Personnel minimal, gestion des ressources limitées
-        - **🚨 Validation des Priorités** : Vérification stricte ROUGE > JAUNE > VERT > GRIS
-        - **👁️ Contrôle de Surveillance** : Tests protocoles sécurité (règle des 15 minutes)
-        - **⚠️ Situations de Saturation** : Gestion des débordements et du boarding
-        - **✨ Scénarios de Référence** : Configuration optimale, baseline pour comparaisons
-        
-        ---
-        
-        ### 🧠 Assistant IA Intégré
-        
-        L'assistant IA peut :
-        - Répondre aux questions sur les patients
-        - Expliquer les décisions prises
-        - Suggérer des modifications (si guardrails OK)
-        
-        ---
-        
-        ### 📊 Statistiques en Temps Réel
-        
-        En bas de page : **6 graphiques Plotly**
-        1. Répartition patients dans le temps
-        2. Total patients par gravité
-        3. Activité Aides-Soignants
-        4. Temps d'attente moyen
-        5. Destinations finales
-        6. Parcours patients (Sankey)
-        """)
-    
-    st.markdown("---")
+    st.markdown("## 🎮 Simulateur Live (God Mode)")
     
     # === GESTION DES SCÉNARIOS ===
     with st.expander("🎭 Scénarios de Test Prédéfinis", expanded=not st.session_state.sim_running):
@@ -956,8 +887,7 @@ def show_simulation() -> None:
                         st.session_state.scenario_data = None
                         st.session_state.sim_running = False  # ← STOPPE la simulation !
                         st.success("🛑 Scénario arrêté")
-                        # Forcer le rafraîchissement pour les stats temps réel
-        st.rerun()
+                        st.rerun()
         
         if st.session_state.scenario_active:
             st.warning("⚠️ **Mode Scénario Actif** - Les configurations manuelles sont désactivées. Cliquez sur 'Démarrer' pour lancer l'exécution automatique.")
@@ -1128,8 +1058,7 @@ def show_simulation() -> None:
             use_container_width=True,
         ):
             st.session_state.sim_running = not st.session_state.sim_running
-            # Forcer le rafraîchissement pour les stats temps réel
-        st.rerun()
+            st.rerun()
     with c2:
         if st.button("🔄 Reset", use_container_width=True):
             # SAVE & ARCHIVE CSV
@@ -1158,8 +1087,7 @@ def show_simulation() -> None:
             st.session_state.sim_time = 0
             st.session_state.brain_logs = []
             st.session_state.sim_running = False
-            # Forcer le rafraîchissement pour les stats temps réel
-        st.rerun()
+            st.rerun()
     with c3:
         if st.button("💾 Export CSV", use_container_width=True):
             if "csv_session_id" in st.session_state:
@@ -1318,12 +1246,7 @@ def show_simulation() -> None:
 
     # === STATISTIQUES TEMPS RÉEL ===
     st.markdown("---")
-    
-    # Afficher un indicateur pendant que le CSV se remplit
-    if st.session_state.sim_time < 10:
-        st.info("📊 Statistiques en cours de génération... (premières données dans quelques secondes)")
-    else:
-        st.markdown("## 📊 Statistiques Temps Réel (Données CSV complètes)")
+    st.markdown("## 📊 Statistiques Temps Réel (Données CSV complètes)")
 
     fig1, fig2, fig3, fig4, fig5, fig6 = create_complete_statistics_charts(
         base_dir, state
@@ -1481,7 +1404,6 @@ def show_simulation() -> None:
                 error_msg = f"[{st.session_state.sim_time//60}h{st.session_state.sim_time%60:02d}] ⚠️ Erreur LLM: {str(e)[:50]}"
                 if not st.session_state.brain_logs or st.session_state.brain_logs[-1] != error_msg:
                     st.session_state.brain_logs.append(error_msg)
-        # Forcer le rafraîchissement pour les stats temps réel
         st.rerun()
 
 # =============================================================================
@@ -1831,7 +1753,6 @@ def show_ai_assistant_chat_inline(base_dir, state):
             {"role": "assistant", "content": response}
         )
 
-        # Forcer le rafraîchissement pour les stats temps réel
         st.rerun()
 
 def show_ai_assistant_chat(base_dir, state):
@@ -1924,5 +1845,4 @@ def show_ai_assistant_chat(base_dir, state):
             st.session_state.ai_chat_history.append(
                 {"role": "assistant", "content": response}
             )
-            # Forcer le rafraîchissement pour les stats temps réel
-        st.rerun()
+            st.rerun()
