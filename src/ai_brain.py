@@ -16,10 +16,27 @@ from src.tools import (
     _get_state
 )
 
-load_dotenv()
-api_key = os.getenv("MISTRAL_API_KEY")
-if not api_key: api_key = "dummy_key"
+def get_api_key():
+    # 1) Hugging Face Spaces / Docker env
+    key = os.getenv("MISTRAL_API_KEY")
+    if key:
+        return key
 
+    # 2) Streamlit Cloud secrets (si tu héberges sur Streamlit Cloud)
+    try:
+        import streamlit as st
+        if "MISTRAL_API_KEY" in st.secrets:
+            return st.secrets["MISTRAL_API_KEY"]
+    except Exception:
+        pass
+
+    raise RuntimeError(
+        "MISTRAL_API_KEY introuvable. "
+        "Sur HuggingFace: Settings -> Secrets -> ajoute MISTRAL_API_KEY. "
+        "Sur Streamlit Cloud: Settings -> Secrets (TOML)."
+    )
+
+api_key = get_api_key()
 client = Mistral(api_key=api_key)
 
 # MODÈLE PAR DÉFAUT (sera modifié dynamiquement)
@@ -270,4 +287,5 @@ def process_brain_cycle():
         print(f"[ERREUR] Brain cycle : {e}")
         import traceback
         traceback.print_exc()
+
         return f"🚨 Erreur Brain"
