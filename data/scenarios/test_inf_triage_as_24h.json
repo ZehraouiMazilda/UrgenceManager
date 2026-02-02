@@ -1,0 +1,119 @@
+{
+  "id": "test_inf_triage_as_24h",
+  "name": "💉 Test INF_TRIAGE + AS (24h)",
+  "description": "Validation de la gestion SANS INF_SALLE : Seulement INF_TRIAGE + AS_01 + AS_02 présents. Les salles d'attente n'ont AUCUNE surveillance infirmière possible. Le LLM doit accepter cette situation ou optimiser les transferts directs vers consultation.",
+  "duration_minutes": 1440,
+  "objective": "Vérifier que le système gère l'absence totale d'INF_SALLE : soit accepte les violations de surveillance (situation d'urgence), soit optimise les transferts directs Triage → Consultation pour éviter d'encombrer les salles non surveillées.",
+  
+  "test_description": {
+    "regle_testee": "Gestion sans personnel de surveillance (INF_SALLE absentes)",
+    "critere_succes": "Stratégie cohérente : soit violations acceptées (explicitement), soit transferts directs optimisés",
+    "critere_echec": "Système bloqué ou comportement incohérent",
+    "metriques_cles": [
+      "Nombre de violations surveillance (attendu élevé)",
+      "Ratio transferts directs Triage→Consultation vs Triage→Salle",
+      "Temps d'attente moyen toutes couleurs"
+    ]
+  },
+  
+  "initial_state": {
+    "staff_absent": ["INF_SALLE_01", "INF_SALLE_02"],
+    "staff_present": ["DOC_01", "AS_01", "AS_02", "INF_TRIAGE_01"],
+    "capacities": {
+      "soins_critiques": 5,
+      "consultation": 1,
+      "salles": {"wr_01": 10, "wr_02": 10, "wr_03": 10}
+    }
+  },
+  
+  "timeline": [
+    {"t": 0, "comment": "=== 8h00 - DÉBUT (AUCUNE INF_SALLE disponible) ==="},
+    {"t": 5, "action": "inject_patient", "severity": "ROUGE", "symptom": "Douleur thoracique intense (oppressante)", "location": "triage"},
+    {"t": 10, "action": "inject_patient", "severity": "JAUNE", "symptom": "Fracture poignet", "location": "triage"},
+    {"t": 15, "action": "inject_patient", "severity": "VERT", "symptom": "Entorse cheville", "location": "triage"},
+    {"t": 20, "action": "inject_patient", "severity": "GRIS", "symptom": "Rhume", "location": "triage"},
+    {"t": 25, "action": "inject_patient", "severity": "JAUNE", "symptom": "Luxation épaule", "location": "triage"},
+    {"t": 30, "action": "inject_patient", "severity": "VERT", "symptom": "Migraine sévère", "location": "triage"},
+    
+    {"t": 60, "comment": "=== 9h00 - MONTÉE (salles vont se remplir sans surveillance) ==="},
+    {"t": 60, "action": "inject_patient", "severity": "ROUGE", "symptom": "AVC suspecté", "location": "triage"},
+    {"t": 65, "action": "inject_patient", "severity": "JAUNE", "symptom": "Fracture côte", "location": "triage"},
+    {"t": 70, "action": "inject_patient", "severity": "VERT", "symptom": "Coupure superficielle", "location": "triage"},
+    {"t": 75, "action": "inject_patient", "severity": "JAUNE", "symptom": "Douleur abdominale aiguë", "location": "triage"},
+    {"t": 80, "action": "inject_patient", "severity": "VERT", "symptom": "Allergie (urticaire)", "location": "triage"},
+    {"t": 85, "action": "inject_patient", "severity": "GRIS", "symptom": "Insomnie", "location": "triage"},
+    
+    {"t": 120, "comment": "=== 10h00 - FLUX CONTINU ==="},
+    {"t": 120, "action": "inject_patient", "severity": "ROUGE", "symptom": "Détresse respiratoire aiguë", "location": "triage"},
+    {"t": 125, "action": "inject_patient", "severity": "JAUNE", "symptom": "Crise d'asthme modérée", "location": "triage"},
+    {"t": 130, "action": "inject_patient", "severity": "VERT", "symptom": "Fièvre isolée", "location": "triage"},
+    {"t": 135, "action": "inject_patient", "severity": "JAUNE", "symptom": "Colique néphrétique", "location": "triage"},
+    {"t": 140, "action": "inject_patient", "severity": "VERT", "symptom": "Otite", "location": "triage"},
+    
+    {"t": 180, "comment": "=== 11h00 - SATURATION SALLES (sans surveillance) ==="},
+    {"t": 180, "action": "inject_patient", "severity": "ROUGE", "symptom": "Infarctus du myocarde", "location": "triage"},
+    {"t": 185, "action": "inject_patient", "severity": "JAUNE", "symptom": "Fracture ouverte tibia", "location": "triage"},
+    {"t": 190, "action": "inject_patient", "severity": "VERT", "symptom": "Brûlure 1er degré (main)", "location": "triage"},
+    {"t": 195, "action": "inject_patient", "severity": "JAUNE", "symptom": "Plaie profonde (nécessite suture)", "location": "triage"},
+    {"t": 200, "action": "inject_patient", "severity": "VERT", "symptom": "Conjonctivite", "location": "triage"},
+    {"t": 205, "action": "inject_patient", "severity": "GRIS", "symptom": "Mal de dos chronique", "location": "triage"},
+    
+    {"t": 240, "comment": "=== 12h00 - PAUSE MIDI ==="},
+    {"t": 250, "action": "inject_patient", "severity": "VERT", "symptom": "Douleur genou", "location": "triage"},
+    {"t": 270, "action": "inject_patient", "severity": "JAUNE", "symptom": "Entorse grave cheville", "location": "triage"},
+    
+    {"t": 300, "comment": "=== 13h00 - REPRISE ==="},
+    {"t": 300, "action": "inject_patient", "severity": "ROUGE", "symptom": "Convulsions", "location": "triage"},
+    {"t": 305, "action": "inject_patient", "severity": "JAUNE", "symptom": "Gastro-entérite sévère", "location": "triage"},
+    {"t": 310, "action": "inject_patient", "severity": "VERT", "symptom": "Piqûre d'insecte", "location": "triage"},
+    {"t": 315, "action": "inject_patient", "severity": "JAUNE", "symptom": "Infection urinaire", "location": "triage"},
+    
+    {"t": 360, "comment": "=== 14h00 - FLUX NORMAL ==="},
+    {"t": 360, "action": "inject_patient", "severity": "VERT", "symptom": "Vertige", "location": "triage"},
+    {"t": 370, "action": "inject_patient", "severity": "JAUNE", "symptom": "Fracture clavicule", "location": "triage"},
+    {"t": 380, "action": "inject_patient", "severity": "GRIS", "symptom": "Anxiété", "location": "triage"},
+    
+    {"t": 420, "comment": "=== 15h00 - PRESSION ==="},
+    {"t": 420, "action": "inject_patient", "severity": "ROUGE", "symptom": "Hémorragie sévère", "location": "triage"},
+    {"t": 425, "action": "inject_patient", "severity": "JAUNE", "symptom": "Traumatisme facial", "location": "triage"},
+    {"t": 430, "action": "inject_patient", "severity": "VERT", "symptom": "Plaie mineure", "location": "triage"},
+    {"t": 435, "action": "inject_patient", "severity": "JAUNE", "symptom": "Fracture humérus", "location": "triage"},
+    
+    {"t": 480, "comment": "=== 16h00 - CONTINUATION ==="},
+    {"t": 480, "action": "inject_patient", "severity": "ROUGE", "symptom": "Choc septique", "location": "triage"},
+    {"t": 485, "action": "inject_patient", "severity": "JAUNE", "symptom": "Appendicite suspectée", "location": "triage"},
+    {"t": 490, "action": "inject_patient", "severity": "VERT", "symptom": "Déchirure musculaire", "location": "triage"},
+    
+    {"t": 540, "comment": "=== 17h00 - FIN JOURNÉE ==="},
+    {"t": 540, "action": "inject_patient", "severity": "JAUNE", "symptom": "Intoxication alimentaire", "location": "triage"},
+    {"t": 550, "action": "inject_patient", "severity": "VERT", "symptom": "Contusion", "location": "triage"},
+    {"t": 560, "action": "inject_patient", "severity": "ROUGE", "symptom": "Polytraumatisme", "location": "triage"},
+    
+    {"t": 600, "comment": "=== 18h00 - DÉBUT SOIRÉE ==="},
+    {"t": 600, "action": "inject_patient", "severity": "JAUNE", "symptom": "Dislocation doigt", "location": "triage"},
+    {"t": 610, "action": "inject_patient", "severity": "VERT", "symptom": "Éruption cutanée", "location": "triage"},
+    
+    {"t": 720, "comment": "=== 20h00 - GARDE NUIT ==="},
+    {"t": 730, "action": "inject_patient", "severity": "VERT", "symptom": "Mal de gorge", "location": "triage"},
+    {"t": 750, "action": "inject_patient", "severity": "JAUNE", "symptom": "Douleur abdominale aiguë", "location": "triage"},
+    {"t": 780, "action": "inject_patient", "severity": "ROUGE", "symptom": "Trauma crânien sévère", "location": "triage"},
+    
+    {"t": 960, "comment": "=== MINUIT ==="},
+    {"t": 970, "action": "inject_patient", "severity": "VERT", "symptom": "Fièvre isolée", "location": "triage"},
+    
+    {"t": 1320, "comment": "=== 6h00 - AUBE ==="},
+    {"t": 1330, "action": "inject_patient", "severity": "ROUGE", "symptom": "Pneumothorax", "location": "triage"},
+    {"t": 1340, "action": "inject_patient", "severity": "JAUNE", "symptom": "Fracture orteil", "location": "triage"},
+    
+    {"t": 1380, "comment": "=== 7h00 - DERNIÈRE HEURE ==="},
+    {"t": 1390, "action": "inject_patient", "severity": "VERT", "symptom": "Allergie (urticaire)", "location": "triage"},
+    {"t": 1400, "action": "inject_patient", "severity": "JAUNE", "symptom": "Luxation épaule", "location": "triage"}
+  ],
+  
+  "expected_metrics": {
+    "max_wait_time_rouge_minutes": 45,
+    "max_violations": 999,
+    "min_patients_treated": 50,
+    "note": "SANS INF_SALLE : Violations de surveillance ATTENDUES et acceptables. Évalue la stratégie du LLM."
+  }
+}

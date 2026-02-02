@@ -1,0 +1,120 @@
+{
+  "id": "test_saturation_sc_24h",
+  "name": "❤️ Test Saturation SC (24h)",
+  "description": "Validation de la gestion quand Soins Critiques est SATURÉ (5/5 lits occupés) : Les patients ROUGE ne peuvent plus aller en SC. Le LLM DOIT les orienter vers Consultation puis Salle d'attente (boarding) avec medical_decision='soins_critiques'.",
+  "duration_minutes": 1440,
+  "objective": "Vérifier que le LLM applique le protocole de saturation SC : ROUGE → Consultation → Salle (boarding SC) en attendant libération de lit. Aucun ROUGE ne doit rester au Triage >30 min.",
+  
+  "test_description": {
+    "regle_testee": "Protocole saturation SC : ROUGE → Consultation → Salle (boarding) si SC plein",
+    "critere_succes": "100% des ROUGE traités (Consult ou SC), temps d'attente ROUGE <35 min",
+    "critere_echec": "Un ROUGE reste au Triage >35 min = ÉCHEC",
+    "metriques_cles": [
+      "Nombre de ROUGE en boarding SC (attendu élevé)",
+      "Temps d'attente moyen ROUGE pour consultation",
+      "Nombre de ROUGE restés au Triage >30 min"
+    ]
+  },
+  
+  "initial_state": {
+    "staff_present": ["DOC_01", "AS_01", "AS_02", "INF_TRIAGE_01", "INF_SALLE_01", "INF_SALLE_02"],
+    "capacities": {
+      "soins_critiques": 5,
+      "consultation": 1,
+      "salles": {"wr_01": 10, "wr_02": 10, "wr_03": 10}
+    }
+  },
+  
+  "timeline": [
+    {"t": 0, "comment": "=== 8h00 - SATURATION IMMÉDIATE SC (5 ROUGE coup sur coup) ==="},
+    {"t": 0, "action": "inject_patient", "severity": "ROUGE", "symptom": "Douleur thoracique intense (oppressante)", "location": "triage"},
+    {"t": 2, "action": "inject_patient", "severity": "ROUGE", "symptom": "AVC suspecté", "location": "triage"},
+    {"t": 4, "action": "inject_patient", "severity": "ROUGE", "symptom": "Trauma crânien sévère", "location": "triage"},
+    {"t": 6, "action": "inject_patient", "severity": "ROUGE", "symptom": "Détresse respiratoire aiguë", "location": "triage"},
+    {"t": 8, "action": "inject_patient", "severity": "ROUGE", "symptom": "Hémorragie sévère", "location": "triage"},
+    
+    {"t": 20, "comment": "=== SC MAINTENANT PLEIN (5/5) - Les prochains ROUGE doivent aller en Consultation ==="},
+    {"t": 20, "action": "inject_patient", "severity": "ROUGE", "symptom": "Infarctus du myocarde", "location": "triage"},
+    {"t": 25, "action": "inject_patient", "severity": "JAUNE", "symptom": "Fracture poignet", "location": "triage"},
+    {"t": 30, "action": "inject_patient", "severity": "ROUGE", "symptom": "Convulsions", "location": "triage"},
+    {"t": 35, "action": "inject_patient", "severity": "VERT", "symptom": "Entorse cheville", "location": "triage"},
+    {"t": 40, "action": "inject_patient", "severity": "ROUGE", "symptom": "Choc septique", "location": "triage"},
+    
+    {"t": 60, "comment": "=== 9h00 - VAGUE CONTINUE ROUGE (test limite) ==="},
+    {"t": 60, "action": "inject_patient", "severity": "ROUGE", "symptom": "Polytraumatisme", "location": "triage"},
+    {"t": 65, "action": "inject_patient", "severity": "JAUNE", "symptom": "Luxation épaule", "location": "triage"},
+    {"t": 70, "action": "inject_patient", "severity": "ROUGE", "symptom": "Brûlures graves (>20% corps)", "location": "triage"},
+    {"t": 75, "action": "inject_patient", "severity": "VERT", "symptom": "Migraine sévère", "location": "triage"},
+    {"t": 80, "action": "inject_patient", "severity": "ROUGE", "symptom": "Pneumothorax", "location": "triage"},
+    
+    {"t": 120, "comment": "=== 10h00 - FLUX MIXTE ==="},
+    {"t": 120, "action": "inject_patient", "severity": "ROUGE", "symptom": "Trauma abdominal", "location": "triage"},
+    {"t": 125, "action": "inject_patient", "severity": "JAUNE", "symptom": "Fracture côte", "location": "triage"},
+    {"t": 130, "action": "inject_patient", "severity": "VERT", "symptom": "Coupure superficielle", "location": "triage"},
+    {"t": 135, "action": "inject_patient", "severity": "ROUGE", "symptom": "Embolie pulmonaire", "location": "triage"},
+    {"t": 140, "action": "inject_patient", "severity": "JAUNE", "symptom": "Douleur abdominale aiguë", "location": "triage"},
+    
+    {"t": 180, "comment": "=== 11h00 - CONTINUATION ==="},
+    {"t": 180, "action": "inject_patient", "severity": "ROUGE", "symptom": "Arrêt cardiaque récupéré", "location": "triage"},
+    {"t": 185, "action": "inject_patient", "severity": "JAUNE", "symptom": "Crise d'asthme modérée", "location": "triage"},
+    {"t": 190, "action": "inject_patient", "severity": "VERT", "symptom": "Allergie (urticaire)", "location": "triage"},
+    {"t": 195, "action": "inject_patient", "severity": "ROUGE", "symptom": "Inconscience (GCS<8)", "location": "triage"},
+    
+    {"t": 240, "comment": "=== 12h00 - PAUSE MIDI ==="},
+    {"t": 250, "action": "inject_patient", "severity": "VERT", "symptom": "Douleur genou", "location": "triage"},
+    {"t": 270, "action": "inject_patient", "severity": "JAUNE", "symptom": "Entorse grave cheville", "location": "triage"},
+    
+    {"t": 300, "comment": "=== 13h00 - REPRISE ==="},
+    {"t": 300, "action": "inject_patient", "severity": "ROUGE", "symptom": "Pancréatite aiguë", "location": "triage"},
+    {"t": 305, "action": "inject_patient", "severity": "JAUNE", "symptom": "Gastro-entérite sévère", "location": "triage"},
+    {"t": 310, "action": "inject_patient", "severity": "VERT", "symptom": "Otite", "location": "triage"},
+    {"t": 315, "action": "inject_patient", "severity": "ROUGE", "symptom": "Fracture ouverte fémur", "location": "triage"},
+    
+    {"t": 360, "comment": "=== 14h00 - FLUX NORMAL ==="},
+    {"t": 360, "action": "inject_patient", "severity": "JAUNE", "symptom": "Fracture clavicule", "location": "triage"},
+    {"t": 370, "action": "inject_patient", "severity": "VERT", "symptom": "Piqûre d'insecte", "location": "triage"},
+    {"t": 380, "action": "inject_patient", "severity": "ROUGE", "symptom": "Syndrome coronarien (non STEMI)", "location": "triage"},
+    
+    {"t": 420, "comment": "=== 15h00 - CONTINUATION PRESSION ==="},
+    {"t": 420, "action": "inject_patient", "severity": "ROUGE", "symptom": "Choc hémorragique", "location": "triage"},
+    {"t": 425, "action": "inject_patient", "severity": "JAUNE", "symptom": "Traumatisme facial", "location": "triage"},
+    {"t": 430, "action": "inject_patient", "severity": "VERT", "symptom": "Plaie mineure", "location": "triage"},
+    
+    {"t": 480, "comment": "=== 16h00 - FLUX SOUTENU ==="},
+    {"t": 480, "action": "inject_patient", "severity": "ROUGE", "symptom": "Trauma thoracique", "location": "triage"},
+    {"t": 485, "action": "inject_patient", "severity": "JAUNE", "symptom": "Fracture humérus", "location": "triage"},
+    {"t": 490, "action": "inject_patient", "severity": "VERT", "symptom": "Vertige", "location": "triage"},
+    
+    {"t": 540, "comment": "=== 17h00 - FIN JOURNÉE ==="},
+    {"t": 540, "action": "inject_patient", "severity": "ROUGE", "symptom": "Hémorragie digestive", "location": "triage"},
+    {"t": 550, "action": "inject_patient", "severity": "JAUNE", "symptom": "Appendicite suspectée", "location": "triage"},
+    {"t": 560, "action": "inject_patient", "severity": "VERT", "symptom": "Déchirure musculaire", "location": "triage"},
+    
+    {"t": 600, "comment": "=== 18h00 - DÉBUT SOIRÉE ==="},
+    {"t": 600, "action": "inject_patient", "severity": "JAUNE", "symptom": "Intoxication alimentaire", "location": "triage"},
+    {"t": 610, "action": "inject_patient", "severity": "ROUGE", "symptom": "Sepsis sévère", "location": "triage"},
+    
+    {"t": 720, "comment": "=== 20h00 - GARDE NUIT (SC toujours saturé) ==="},
+    {"t": 730, "action": "inject_patient", "severity": "VERT", "symptom": "Mal de gorge", "location": "triage"},
+    {"t": 750, "action": "inject_patient", "severity": "JAUNE", "symptom": "Douleur abdominale aiguë", "location": "triage"},
+    {"t": 780, "action": "inject_patient", "severity": "ROUGE", "symptom": "Douleur thoracique intense (oppressante)", "location": "triage"},
+    
+    {"t": 960, "comment": "=== MINUIT ==="},
+    {"t": 970, "action": "inject_patient", "severity": "VERT", "symptom": "Fièvre isolée", "location": "triage"},
+    
+    {"t": 1320, "comment": "=== 6h00 - AUBE ==="},
+    {"t": 1330, "action": "inject_patient", "severity": "ROUGE", "symptom": "AVC suspecté", "location": "triage"},
+    {"t": 1340, "action": "inject_patient", "severity": "JAUNE", "symptom": "Fracture orteil", "location": "triage"},
+    
+    {"t": 1380, "comment": "=== 7h00 - DERNIÈRE HEURE ==="},
+    {"t": 1390, "action": "inject_patient", "severity": "ROUGE", "symptom": "Détresse respiratoire aiguë", "location": "triage"},
+    {"t": 1400, "action": "inject_patient", "severity": "VERT", "symptom": "Allergie (urticaire)", "location": "triage"}
+  ],
+  
+  "expected_metrics": {
+    "max_wait_time_rouge_minutes": 35,
+    "max_violations": 1,
+    "min_patients_treated": 70,
+    "note": "SC SATURÉ : ROUGE doivent aller en Consultation puis Salle (boarding). Temps d'attente ROUGE peut monter à 35 min (acceptable)."
+  }
+}

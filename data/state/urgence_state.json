@@ -22,7 +22,7 @@
     }
   },
   "state": {
-    "time": 0,
+    "time": 225,
     "is_running": false,
     "triage_zone": {
       "id": "triage",
@@ -42,7 +42,8 @@
         "occupancy": 0,
         "patients": [],
         "staff": [
-          "INF_SALLE_01"
+          "INF_SALLE_01",
+          "AS_01"
         ]
       },
       "wr_02": {
@@ -62,7 +63,6 @@
         "occupancy": 0,
         "patients": [],
         "staff": [
-          "AS_01",
           "AS_02"
         ]
       }
@@ -114,12 +114,25 @@
         "id": "cardio",
         "name": "Cardiologie",
         "capacity": 12,
-        "occupancy": 0,
-        "patients": [],
+        "occupancy": 1,
+        "patients": [
+          "PAT_001"
+        ],
         "staff": []
       }
     },
-    "patients": {},
+    "patients": {
+      "PAT_001": {
+        "id": "PAT_001",
+        "severity": "VERT",
+        "symptom": "Entorse de cheville légère à modérée",
+        "location": "cardio",
+        "status": "hospitalized",
+        "arrival_time": 0,
+        "treatment_end_time": 917,
+        "medical_decision": "cardio"
+      }
+    },
     "staff": {
       "DOC_01": {
         "id": "DOC_01",
@@ -137,7 +150,7 @@
         "is_busy": false,
         "busy_until": 0,
         "return_transport_code": null,
-        "is_present": true
+        "is_present": false
       },
       "INF_SALLE_01": {
         "id": "INF_SALLE_01",
@@ -146,7 +159,7 @@
         "is_busy": false,
         "busy_until": 0,
         "return_transport_code": null,
-        "is_present": true
+        "is_present": false
       },
       "INF_SALLE_02": {
         "id": "INF_SALLE_02",
@@ -155,7 +168,7 @@
         "is_busy": false,
         "busy_until": 0,
         "return_transport_code": null,
-        "is_present": true
+        "is_present": false
       },
       "AS_01": {
         "id": "AS_01",
@@ -163,7 +176,7 @@
         "location": "wr_03",
         "is_busy": false,
         "busy_until": 0,
-        "return_transport_code": null,
+        "return_transport_code": "tran_consult_wr",
         "is_present": true
       },
       "AS_02": {
@@ -173,7 +186,7 @@
         "is_busy": false,
         "busy_until": 0,
         "return_transport_code": null,
-        "is_present": true
+        "is_present": false
       }
     },
     "transport_consultation_active": false,
