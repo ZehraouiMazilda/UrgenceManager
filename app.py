@@ -100,7 +100,7 @@ with st.sidebar:
         minutes = st.session_state.sim_time
         st.metric("⏱️ Temps Hôpital", f"{minutes // 60}h{minutes % 60:02d}")
     
-    st.caption("© Hackathon 2026 - v1.0")
+    st.caption("Urgence Manager")
 
 # --- 5. ROUTAGE DES PAGES ---
 if st.session_state.current_page == "Accueil & Contexte":
@@ -111,3 +111,4 @@ elif st.session_state.current_page == "Dashboard & KPIs":
     show_stats()
 elif st.session_state.current_page == "À Propos":
     show_about()
+
