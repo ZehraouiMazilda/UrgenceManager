@@ -187,7 +187,7 @@ Une interface web interactive permet de :
 
 Une version déployée de l'application est accessible en ligne à l'adresse suivante :
 
-[https://URL_DE_L_APP](https://URL_DE_L_APP)
+[UrgenceManager](https://urgencemanager-7puxneqxo5jsbeuayzjbey.streamlit.app/)
 
 Elle permet de lancer des simulations, d'observer l'évolution du système en temps réel et d'interagir avec le moteur via l'interface de chat.
 
