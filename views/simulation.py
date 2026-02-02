@@ -13,11 +13,10 @@ from datetime import datetime
 import json
 import plotly.express as px
 import plotly.graph_objects as go
-
 from src.models import Patient, Severity, PatientStatus, StateFile
 from src.utils import load_initial_state, save_state
 from src.logger import log_event
-from src.ai_brain import process_brain_cycle, set_llm_model
+from src.ai_brain import process_brain_cycle
 from mistralai import Mistral
 
 # =============================================================================
@@ -1922,6 +1921,7 @@ def show_ai_assistant_chat(base_dir, state):
                 {"role": "assistant", "content": response}
             )
             st.rerun()
+
 
 
 
