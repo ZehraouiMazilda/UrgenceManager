@@ -23,13 +23,8 @@ if not api_key: api_key = "dummy_key"
 
 client: Mistral = Mistral(api_key=api_key)
 
-# MODÈLE PAR DÉFAUT (sera modifié dynamiquement)
+# MODÈLE PAR DÉFAUT 
 CURRENT_MODEL: str = "mistral-large-latest"
-
-def set_llm_model(model_name: str) -> None:
-    """Change le modèle LLM utilisé"""
-    global CURRENT_MODEL
-    CURRENT_MODEL = model_name
 
 SYSTEM_PROMPT: str = """
 Tu es le CHEF DE RÉGULATION DES URGENCES HOSPITALIÈRES.
@@ -118,7 +113,7 @@ def call_llm_api(context_text: str) -> str:
     for attempt in range(max_retries):
         try:
             chat_response = client.chat.complete(
-                model=CURRENT_MODEL,  # Utilise le modèle sélectionné
+                model=CURRENT_MODEL,  
                 messages=[{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": context_text}],
                 temperature=0.0,
             )
@@ -279,4 +274,5 @@ def process_brain_cycle() -> Optional[str]:
         print(f"[ERREUR] Brain cycle : {e}")
         import traceback
         traceback.print_exc()
+
         return f"🚨 Erreur Brain"
