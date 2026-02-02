@@ -1206,7 +1206,7 @@ def show_simulation():
         with st.expander("🤖 Assistant IA", expanded=True):
             show_ai_assistant_chat_inline(base_dir, state)
 
-    # VISUALISATION (frontend intact)
+    # VISUALISATION 
     st.markdown("---")
     c_sc, c_cs = st.columns(2)
     with c_sc:
@@ -1356,9 +1356,9 @@ def show_simulation():
     st.markdown("---")
     st.plotly_chart(fig6, use_container_width=True, key="chart_parcours_sankey")
 
-    # GAME LOOP (AVEC TEMPS MODIFIÉ 0.5s)
+    # GAME LOOP 
     if st.session_state.sim_running:
-        time.sleep(0.5)  # <--- 0.5 sec = 5 min simulées
+        time.sleep(0.5)  
         st.session_state.sim_time += 5
         upd = False
         curr = load_initial_state(state_path)
@@ -1765,8 +1765,7 @@ GUARDRAILS ACTIFS:
 
         # === ÉTAPE 5 : ACTION (si autorisé) ===
         if is_action_request and guardrail_ok:
-            # Ici tu pourrais ajouter la logique pour vraiment modifier l'état
-            # Pour l'instant on simule
+            
             ai_response += "\n\n✅ Modification appliquée dans le système."
         elif is_action_request and not guardrail_ok:
             ai_response = guardrail_msg + "\n\n" + ai_response
@@ -1781,9 +1780,7 @@ GUARDRAILS ACTIFS:
 # =============================================================================
 
 def show_ai_assistant_chat_inline(base_dir, state):
-    """
-    Version inline de l'assistant (pour utiliser dans un expander)
-    """
+   
     simulation_running = st.session_state.get("sim_running", False)
 
     if "ai_chat_history" not in st.session_state:
@@ -1838,9 +1835,6 @@ def show_ai_assistant_chat_inline(base_dir, state):
         st.rerun()
 
 def show_ai_assistant_chat(base_dir, state):
-    """
-    Assistant IA - Version simplifiée pour expander
-    """
 
     simulation_running = st.session_state.get("sim_running", False)
 
@@ -1928,6 +1922,7 @@ def show_ai_assistant_chat(base_dir, state):
                 {"role": "assistant", "content": response}
             )
             st.rerun()
+
 
 
 
