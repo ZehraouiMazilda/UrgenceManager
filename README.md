@@ -123,25 +123,25 @@ docs/system_model.md
 
 ## Machine Learning
 
-Le projet intègre **trois briques de machine learning**, chacune répondant à un besoin opérationnel distinct.
+Cette brique constitue l'intelligence prédictive de l'Urgence Manager. Elle combine deux approches complémentaires pour transformer les données brutes de simulation en outils d'aide à la décision.
 
-### 1. Prédiction du temps d'attente
+### 1. Classification de l'état des urgences (K-means)
 
-Modèle de régression estimant le temps d'attente en fonction :
-- de la charge du service,
-- de la gravité des patients,
-- des ressources disponibles.
+- **Algorithme** : Clustering non supervisé (K-Means).
 
-### 2. Clustering des situations de surcharge
+- **Fonctionnement** : Le modèle regroupe les états du système en 4 classes de tension : CALME, NORMAL, TENDU, CRITIQUE.
 
-Identification de motifs récurrents d'engorgement afin de :
-- caractériser les états de stress du service,
-- comparer des situations similaires.
+- **Utilité** : Permet de déclencher des alertes automatiques (ex: passage en état "CRITIQUE") basées sur la saturation des salles d'attente et des unités aval.
 
-### 3. Classification du risque de blocage
+### 2. Prédiction du devenir patient (Random Forest)
 
-Prédiction du risque qu'un patient bloque des ressources aval
-(hospitalisation, soins critiques).
+Ce modèle prédit l'issue du parcours de chaque patient dès son admission, facilitant l'anticipation des besoins en lits.
+
+- **Algorithme** : Random Forest Classifier.
+
+- **Performance** : Précision de 90.1% sur un échantillon de 2459 patients.
+
+- **Features Importance** : Le modèle s'appuie principalement sur trois variables clés : Temps (durée de prise en charge), Gravité (score IOA), Nb Transports (mouvements logistiques internes)
 
 ---
 
