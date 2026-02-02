@@ -1,6 +1,6 @@
 # Moteur de gestion des urgences
 
-Le module `tools.py` implément un **moteur de règles opérationnelles** pour la gestion d'un service d'urgences hospitalières simulé.
+Le module `tools.py` implémente un **moteur de règles opérationnelles** pour la gestion d'un service d'urgences hospitalières simulé.
 
 Il permet de :
 - gérer les déplacements des patients entre zones
