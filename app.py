@@ -2,9 +2,7 @@ import streamlit as st
 
 # Import des pages depuis le dossier views
 from views.context import show_context
-from views.scenarios import show_scenarios
 from views.simulation import show_simulation
-from views.chat import show_ai_assistant
 from views.stats import main as show_stats
 from views.about import show_about
 
@@ -36,15 +34,11 @@ with st.sidebar:
     st.caption("Hackathon 2026 - v0.2 (Modular)")
 
 # --- ROUTAGE ---
-if page_selection == "🏠 Accueil & Contexte":
+if page_selection == "Accueil & Contexte":
     show_context()
-elif page_selection == "🎬 Scénarios":
-    show_scenarios()
-elif page_selection == "🎮 Simulateur Live":
+elif page_selection == "Simulateur Live":
     show_simulation()
-elif page_selection == "💬 Assistant IA":
-    show_ai_assistant()
-elif page_selection == "📊 Dashboard & KPIs":
+elif page_selection == "Dashboard & KPIs":
     show_stats()
-elif page_selection == "ℹ️ À Propos":
+elif page_selection == "À Propos":
     show_about()
