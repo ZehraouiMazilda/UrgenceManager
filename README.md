@@ -206,13 +206,13 @@ Elle permet de lancer des simulations, d'observer l'évolution du système en te
 #### Simulation en temps réel
 
 <p align="center">
-  <img src="doc/assets/simulation1.png" alt="Simulation - vue 1" width="450"/>
+  <img src="doc/assets/simulation1.png" alt="Simulation - vue 1" width="300"/>
   <br/>
-  <img src="doc/assets/simulation2.png" alt="Simulation - vue 2" width="450"/>
+  <img src="doc/assets/simulation2.png" alt="Simulation - vue 2" width="300"/>
   <br/>
-  <img src="doc/assets/simulation3.png" alt="Simulation - vue 3" width="450"/>
+  <img src="doc/assets/simulation3.png" alt="Simulation - vue 3" width="300"/>
   <br/>
-  <img src="doc/assets/simulation4.png" alt="Simulation - vue 4" width="450"/>
+  <img src="doc/assets/simulation4.png" alt="Simulation - vue 4" width="300"/>
 </p>
 
 ---
@@ -222,9 +222,9 @@ Elle permet de lancer des simulations, d'observer l'évolution du système en te
 <p align="center">
   <img src="doc/assets/dashoard1.png" alt="Dashboard – KPIs" width="450"/>
   <br/>
-  <img src="doc/assets/dashboard2.png" alt="Dashboard – supervision" width="450"/>
+  <img src="doc/assets/dashboard2.png" alt="Dashboard – supervision" width="300"/>
   br/>
-  <img src="doc/assets/dashboard3.png" alt="Dashboard – supervision" width="450"/>
+  <img src="doc/assets/dashboard3.png" alt="Dashboard – supervision" width="300"/>
 </p>
 
 ---
@@ -232,7 +232,7 @@ Elle permet de lancer des simulations, d'observer l'évolution du système en te
 #### À propos – Sous le capot
 
 <p align="center">
-  <img src="doc/assets/about.png" alt="Architecture et principes internes" width="500"/>
+  <img src="doc/assets/about.png" alt="Architecture et principes internes" width="450"/>
 </p>
 ---
 
