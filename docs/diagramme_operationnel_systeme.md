@@ -1,10 +1,10 @@
-### Légende
+### Diagramme opérationnel du système
 
-- **Flèches pleines** : flux patients
-- **Flèches pointillées** : contraintes métier
-- **Basic** : `transfer_patient_basic`
-- **Escort + AS** : `transfer_patient_with_escort`
-- **Surveillance** : `transfer_staff`
+Ce diagramme représente :
+- l’état global
+- les entités principales
+- les 3 types de transferts
+- les contrôles critiques (sévérité, ressources, capacité)
 
 Tout est relié à l’état JSON → aucune action n’est locale.
 
@@ -95,4 +95,11 @@ flowchart LR
     STATE --- DOC
 ```
 
+##### Légende
+
+<sup>**Flèches pleines** : flux patients</sup>  
+<sup>**Flèches pointillées** : contraintes métier</sup>  
+<sup>**Basic** : `transfer_patient_basic`</sup>  
+<sup>**Escort + AS** : `transfer_patient_with_escort`</sup>  
+<sup>**Surveillance** : `transfer_staff`</sup>  
 
