@@ -1,5 +1,13 @@
 import streamlit as st
 
+# --- CONFIGURATION GLOBALE ---
+st.set_page_config(
+    page_title="Urgence Manager",
+    page_icon="🏥",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
 # Import des pages depuis le dossier views
 from views.context import show_context
 from views.scenarios import show_scenarios
@@ -8,13 +16,7 @@ from views.chat import show_ai_assistant
 from views.stats import main as show_stats
 from views.about import show_about
 
-# --- CONFIGURATION GLOBALE ---
-st.set_page_config(
-    page_title="Urgence Manager",
-    page_icon="🏥",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+
 
 # --- NAVIGATION (SIDEBAR) ---
 with st.sidebar:
@@ -50,3 +52,4 @@ elif page_selection == "📊 Dashboard & KPIs":
     show_stats()
 elif page_selection == "ℹ️ À Propos":
     show_about()
+
