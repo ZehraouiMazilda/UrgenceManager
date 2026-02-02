@@ -1008,25 +1008,6 @@ def show_simulation():
     # Si le mode scénario est actif, on désactive les inputs manuels
     disable_manual = st.session_state.scenario_active
 
-    # === SÉLECTION MODÈLE LLM ===
-    with st.expander("🤖 Configuration IA", expanded=False):
-        llm_models = {
-            "Mistral Large (Recommandé)": "mistral-large-latest",
-            "Mistral Medium": "mistral-medium-latest",
-            "Mistral Small": "mistral-small-latest",
-            "Codestral": "codestral-latest",
-        }
-
-        selected_model = st.selectbox(
-            "Modèle LLM",
-            options=list(llm_models.keys()),
-            index=0,
-            key="llm_model_select",
-        )
-
-        set_llm_model(llm_models[selected_model])
-        st.info(f"🧠 Modèle actif : **{selected_model}**")
-
     # === CAPACITÉS MODIFIABLES (VERROUILLÉ EN SCÉNARIO) ===
     with st.expander("⚙️ Configuration Capacités", expanded=False):
         if disable_manual: st.caption("🔒 Désactivé en mode Scénario")
@@ -1947,5 +1928,6 @@ def show_ai_assistant_chat(base_dir, state):
                 {"role": "assistant", "content": response}
             )
             st.rerun()
+
 
 
