@@ -25,11 +25,6 @@ client: Mistral = Mistral(api_key=api_key)
 
 # MODÈLE PAR DÉFAUT 
 CURRENT_MODEL: str = "mistral-large-latest"
-
-def set_llm_model(model_name):
-    """Change le modèle LLM utilisé"""
-    global CURRENT_MODEL
-    CURRENT_MODEL = model_name
     
 SYSTEM_PROMPT: str = """
 Tu es le CHEF DE RÉGULATION DES URGENCES HOSPITALIÈRES.
@@ -281,4 +276,5 @@ def process_brain_cycle() -> Optional[str]:
         traceback.print_exc()
 
         return f"🚨 Erreur Brain"
+
 
