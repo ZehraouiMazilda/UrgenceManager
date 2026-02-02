@@ -871,7 +871,7 @@ def show_simulation() -> None:
                         st.success(f"✅ Scénario chargé et démarré : {selected_scenario['title']}")
                         st.toast(f"🎭 Exécution automatique démarrée", icon="✅")
                         
-                        time.sleep(0.5)
+                        time.sleep(1)
                         st.rerun()
                         
                     except Exception as e:
@@ -1264,9 +1264,9 @@ def show_simulation() -> None:
     st.markdown("---")
     st.plotly_chart(fig6, use_container_width=True, key="chart_parcours_sankey")
 
-    # GAME LOOP (AVEC TEMPS MODIFIÉ 0.5s)
+    # GAME LOOP 
     if st.session_state.sim_running:
-        time.sleep(0.5)  # <--- 0.5 sec = 5 min simulées
+        time.sleep(1)  
         st.session_state.sim_time += 5
         upd = False
         curr = load_initial_state(state_path)
@@ -1846,3 +1846,4 @@ def show_ai_assistant_chat(base_dir, state):
                 {"role": "assistant", "content": response}
             )
             st.rerun()
+
