@@ -38,20 +38,20 @@
 
 ## Aperçu
 
-**Urgence Manager** est un projet académique consacré à la **gestion logistique et opérationnelle des flux de patients dans un service d’urgences hospitalières**, à l’aide d’une **architecture à base de règles**, complétée par :
+**Urgence Manager** est un projet académique consacré à la **gestion logistique et opérationnelle des flux de patients dans un service d'urgences hospitalières**, à l'aide d'une **architecture à base de règles**, complétée par :
 
 - des méthodes de **machine learning**,
 - des **modèles de langage (LLM)**,
 - un pipeline de **Retrieval-Augmented Generation (RAG)**,
 - et une **simulation interactive**.
 
-Les services d’urgences sont soumis à de fortes contraintes :
+Les services d'urgences sont soumis à de fortes contraintes :
 ressources limitées, arrivées imprévisibles, niveaux de gravité hétérogènes, pression temporelle continue et dépendances aval (hospitalisation).
 
-L’objectif de ce projet est de concevoir un **assistant d’aide à la décision logistique**, capable de :
+L'objectif de ce projet est de concevoir un **assistant d'aide à la décision logistique**, capable de :
 
-- suivre l’état global d’un service d’urgences,
-- gérer les flux de patients et l’allocation des ressources,
+- suivre l'état global d'un service d'urgences,
+- gérer les flux de patients et l'allocation des ressources,
 - détecter les situations critiques ou anormales,
 - **expliquer** les décisions et priorisations en langage naturel.
 
@@ -61,18 +61,18 @@ Le système est conçu comme un **outil de support**, et non comme un substitut 
 
 ## Objectifs
 
-Le projet s’articule autour de trois objectifs complémentaires.
+Le projet s'articule autour de trois objectifs complémentaires.
 
 ### 1. Gestion logistique des flux
 
 - Modélisation explicite du parcours patient
 - Gestion de ressources limitées (salles, personnel, unités)
-- Détection des engorgements et goulets d’étranglement
+- Détection des engorgements et goulets d'étranglement
 - Respect strict des contraintes organisationnelles et médicales
 
 ### 2. Aide à la décision et explicabilité
 
-- Analyse de l’état courant du service
+- Analyse de l'état courant du service
 - Interaction avec le système en langage naturel
 - Explication des priorités, blocages et risques identifiés
 - Traçabilité complète des décisions et événements
@@ -88,7 +88,7 @@ Le projet s’articule autour de trois objectifs complémentaires.
 
 ## Points clés du projet
 
-- Modélisation explicite d’un service d’urgences sous forme d’état global
+- Modélisation explicite d'un service d'urgences sous forme d'état global
 - Moteur de règles déterministe indépendant de toute IA
 - Séparation claire entre :
   - logique métier,
@@ -98,7 +98,7 @@ Le projet s’articule autour de trois objectifs complémentaires.
 - Pipeline RAG fondé sur des règles explicites et des données factuelles
 - Distinction stricte entre **RAG (analyse)** et **Agent (action)**
 - Interface interactive de simulation et de supervision
-- Accent fort mis sur l’explicabilité et la reproductibilité
+- Accent fort mis sur l'explicabilité et la reproductibilité
 
 ---
 
@@ -125,22 +125,22 @@ docs/system_model.md
 
 Le projet intègre **trois briques de machine learning**, chacune répondant à un besoin opérationnel distinct.
 
-### 1. Prédiction du temps d’attente
+### 1. Prédiction du temps d'attente
 
-Modèle de régression estimant le temps d’attente en fonction :
+Modèle de régression estimant le temps d'attente en fonction :
 - de la charge du service,
 - de la gravité des patients,
 - des ressources disponibles.
 
 ### 2. Clustering des situations de surcharge
 
-Identification de motifs récurrents d’engorgement afin de :
+Identification de motifs récurrents d'engorgement afin de :
 - caractériser les états de stress du service,
 - comparer des situations similaires.
 
 ### 3. Classification du risque de blocage
 
-Prédiction du risque qu’un patient bloque des ressources aval
+Prédiction du risque qu'un patient bloque des ressources aval
 (hospitalisation, soins critiques).
 
 ---
@@ -152,20 +152,20 @@ Les modèles de langage sont utilisés **de manière strictement encadrée**.
 ### RAG (Retrieval-Augmented Generation)
 
 - Accès en lecture seule à :
-  - l’état courant,
-  - l’historique des événements,
+  - l'état courant,
+  - l'historique des événements,
   - les règles explicites.
 - Utilisé uniquement pour :
-  - l’analyse,
-  - l’explication,
+  - l'analyse,
+  - l'explication,
   - la recommandation.
 
-Le LLM **ne modifie jamais l’état du système** en mode RAG.
+Le LLM **ne modifie jamais l'état du système** en mode RAG.
 
 ### Agent
 
 - Mode distinct et explicitement séparé
-- Capable de proposer et d’orchestrer des actions parmi des outils atomiques, sous validation explicite
+- Capable de proposer et d'orchestrer des actions parmi des outils atomiques, sous validation explicite
 - Strictement contraint par les règles métier
 - Utilisé pour le pilotage expérimental du système
 
@@ -178,12 +178,21 @@ Le LLM **ne modifie jamais l’état du système** en mode RAG.
 Une interface web interactive permet de :
 
 - injecter des patients avec différents niveaux de gravité,
-- observer l’évolution en temps réel du service,
+- observer l'évolution en temps réel du service,
 - déplacer ressources et patients selon les règles,
 - interagir avec le système via un chat explicatif,
 - rejouer des scénarios prédéfinis.
 
-L’application peut être exécutée localement ou déployée en ligne.
+### Application en ligne
+
+Une version déployée de l'application est accessible en ligne à l'adresse suivante :
+
+[https://URL_DE_L_APP](https://URL_DE_L_APP)
+
+Elle permet de lancer des simulations, d'observer l'évolution du système en temps réel et d'interagir avec le moteur via l'interface de chat.
+
+⚠️ L’application est fournie à des fins de démonstration et peut être sujette à des interruptions.
+
 
 ---
 
@@ -191,17 +200,17 @@ L’application peut être exécutée localement ou déployée en ligne.
 
 ### Métriques métier
 
-- temps d’attente par gravité,
-- taux d’occupation des ressources,
+- temps d'attente par gravité,
+- taux d'occupation des ressources,
 - fréquence et durée des congestions,
 - situations de boarding.
 
 ### Métriques système
 
 - latence des appels LLM,
-- nombre d’appels,
+- nombre d'appels,
 - estimation des coûts,
-- indicateurs d’impact environnemental (proxies).
+- indicateurs d'impact environnemental (proxies).
 
 ---
 
@@ -213,7 +222,7 @@ urgence-manager/
 ├── README.md
 ├── LICENSE
 ├── requirements.txt
-├── app.py                                        # Point d’entrée de l’application
+├── app.py                                        # Point d'entrée de l'application
 ├── simulation.py                                 # Lancement de simulations simples
 ├── scenarios.py                                  # Scénarios prédéfinis
 │
