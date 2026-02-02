@@ -71,7 +71,6 @@ def load_all_sessions() -> Tuple[pd.DataFrame, pd.DataFrame]:
             with open(csv_file, 'r', encoding='utf-8') as f:
                 first_line = f.readline()
             
-            # Si "timestamp" n'est pas au début, c'est un fichier sans header (Scénario)
             if "timestamp" not in first_line:
                 df = pd.read_csv(csv_file, sep=';', header=None, names=cols_pat)
             else:
@@ -119,9 +118,8 @@ def load_all_sessions() -> Tuple[pd.DataFrame, pd.DataFrame]:
 
 
 def extract_session_info(session_id: str) -> Dict[str, Any]:
-    """Extrait les infos d'une session depuis son ID."""
+  
     try:
-        # Format attendu: SESSION_YYYYMMDD_HHMMSS ou SCENARIO_Nom_HHMM
         parts = session_id.split("_")
         if "SESSION" in session_id and len(parts) >= 5:
             start_date = datetime.strptime(parts[1], "%Y%m%d")
@@ -146,9 +144,7 @@ def extract_session_info(session_id: str) -> Dict[str, Any]:
 # =============================================================================
 
 def classify_emergency_state(df_patients: pd.DataFrame) -> Dict[str, Any]:
-    """
-    Classifie l'état actuel des urgences en utilisant le clustering K-Means.
-    """
+  
     if df_patients.empty or not ML_AVAILABLE:
         return {"state": "UNKNOWN", "confidence": 0, "features": {}}
     
@@ -253,8 +249,6 @@ def calculate_system_metrics(df_patients: pd.DataFrame, df_staff: pd.DataFrame) 
     
     if not df_patients.empty:
         df_patients_sorted = df_patients.sort_values('timestamp')
-        # Calculer le temps moyen entre les actions d'un même patient
-        # Gestion des cas où un patient n'a qu'une seule ligne
         grouped = df_patients_sorted.groupby('id')['timestamp']
         if len(grouped) > 0:
              time_diffs = grouped.apply(lambda x: x.diff().mean() if len(x) > 1 else 0).dropna()
@@ -895,4 +889,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 
