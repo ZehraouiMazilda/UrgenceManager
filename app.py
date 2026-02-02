@@ -31,7 +31,7 @@ with st.sidebar:
     )
 
     st.markdown("---")
-    st.caption("Hackathon 2026 - v0.2 (Modular)")
+    st.caption("Urgence Manager")
 
 # --- ROUTAGE ---
 if page_selection == "Accueil & Contexte":
@@ -42,3 +42,4 @@ elif page_selection == "Dashboard & KPIs":
     show_stats()
 elif page_selection == "À Propos":
     show_about()
+
