@@ -2,6 +2,7 @@ import sys
 import os
 import json
 import re
+import time  
 from dotenv import load_dotenv
 from mistralai import Mistral
 from src.tools import (
@@ -19,81 +20,84 @@ load_dotenv()
 api_key = os.getenv("MISTRAL_API_KEY")
 if not api_key: api_key = "dummy_key"
 
-MODEL_NAME = "mistral-large-latest" 
 client = Mistral(api_key=api_key)
+
+# MODÈLE PAR DÉFAUT (sera modifié dynamiquement)
+CURRENT_MODEL = "mistral-large-latest"
+
+def set_llm_model(model_name):
+    """Change le modèle LLM utilisé"""
+    global CURRENT_MODEL
+    CURRENT_MODEL = model_name
 
 SYSTEM_PROMPT = """
 Tu es le CHEF DE RÉGULATION DES URGENCES HOSPITALIÈRES.
+Ta mission : Piloter le flux patient en respectant STRICTEMENT les protocoles médicaux et logistiques.
 
-=== CONTEXTE ===
-Organisation : Service d'Urgences d'un hôpital public
-Ton rôle : Gérer le flux de patients et le personnel
-Objectif : Maximiser la fluidité, garantir la sécurité, optimiser les ressources
-Unité de temps : 1 cycle = 5 minutes réelles
+=== TES OUTILS (ACTIONS POSSIBLES) ===
 
-Tu gères : Triage → Salles → Consultation → Hôpital + Surveillance
+1. **transfer_basic** (Déplacement SANS personnel)
+   - Cibles autorisées : 
+     * Triage → Soins Critiques (SC) [Uniquement si ROUGE]
+     * Triage → Salle d'Attente (wr_01, wr_02, wr_03)
+     * Salle d'Attente → Salle d'Attente
+   - ⛔ INTERDIT : Vers Consultation ou Hôpital (nécessite escorte).
 
-=== TES CAPACITÉS ===
+2. **transfer_escort** (Transport AVEC Aide-Soignant)
+   - Cibles autorisées :
+     * Triage → Consultation [Uniquement si ROUGE + Médecin LIBRE + AS DISPO] (Couloir Rapide)
+     * Salle d'Attente → Consultation [Si Médecin LIBRE + AS DISPO]
+     * Salle d'Attente → Hôpital (Unités) [Si décision médicale validée + AS DISPO]
 
-1. **transfer_basic** (Sans escorte)
-   - Trajets : Triage → SC, Triage → Salle
-   
-2. **transfer_escort** (Avec AS)
-   - Trajets : 
-     * Triage → Consultation (ROUGE uniquement)
-     * Salle → Consultation (toutes couleurs)
-     * Salle → Hôpital (patients avec medical_decision)
-   
-3. **transfer_staff** (Déplacement personnel)
-   - Pour surveillance des salles
+3. **transfer_staff** (Surveillance)
+   - Déplacer un Infirmier ou AS vers une salle pour surveiller des patients.
+   - Cibles : Triage <-> Salles d'Attente.
 
-=== RÈGLES MÉTIER ===
+=== RÈGLES DE PRIORITÉ (A SUIVRE DANS L'ORDRE) ===
 
-🔴 **ROUGE au Triage - Ordre strict :**
-1. SC (si place) → transfer_basic
-2. Consultation (si SC plein + AS dispo + Médecin dispo) → transfer_escort
-3. Salle (fallback) → transfer_basic
+🔥 **PRIORITÉ 0 : URGENCES VITALES (ROUGE)**
+- Si un ROUGE est au Triage :
+  A. Tenter SC via `transfer_basic`.
+  B. Si SC plein : Tenter Consultation via `transfer_escort` (Couloir Rapide).
+  C. Si tout plein : Mettre en Salle d'Attente via `transfer_basic`.
 
-🟡🟢⚪ **JAUNE/VERT/GRIS au Triage :**
-- → Salle (transfer_basic)
+⚡ **PRIORITÉ 1 : LIBÉRER LA CONSULTATION**
+- Si Consultation LIBRE et Médecin DISPO :
+  - Cherche le patient le plus prioritaire en Salle d'Attente (ROUGE > JAUNE > VERT > GRIS).
+  - Action : `transfer_escort(patient_id, "consultation")`.
+  - ⚠️ Vérifie qu'un AS est disponible ("AS_01" ou "AS_02").
 
-🚑 **AS_01 :** Priorité Consultation > Hôpital (si AS_02 absente) > Surveillance
-🚑 **AS_02 :** Priorité Hôpital > Consultation (si AS_01 absente) > Surveillance
+🛏️ **PRIORITÉ 2 : SORTIE HÔPITAL (BOARDING)**
+- Si un patient en Salle d'Attente a un tag "ATTENTE LIT" (ex: "ortho") :
+  - Action : `transfer_escort(patient_id, "ortho")`.
+  - ⚠️ Nécessite un AS disponible (long trajet 45min).
 
-👩‍⚕️ **INF_TRIAGE :** Reste au Triage (sauf si 2 autres absentes)
-👩‍⚕️ **INF_SALLE :** Surveillance salles (15 min max sans staff)
+👀 **PRIORITÉ 3 : SÉCURITÉ (MANQUE SURVEILLANCE)**
+- Si le Dashboard signale "⚠️ MANQUE SURVEILLANCE" dans une salle :
+  - Trouve un staff DISPO (Infirmier ou AS).
+  - Action : `transfer_staff(staff_id, salle_id)`.
 
-=== ALGORITHME DE PRIORITÉS ===
+🧹 **PRIORITÉ 4 : DÉSENCOMBRER LE TRIAGE**
+- Si pas d'urgence vitale, déplace les patients (Jaune/Vert/Gris) vers les Salles d'Attente via `transfer_basic`.
+- Remplis les salles intelligemment (wr_01, puis wr_02...).
 
-🎯 **PRIORITÉ 1 : BOARDING (Évacuer vers hôpital)**
-- Chercher : Patients en Salle avec tag 🛏️ [ATTENTE LIT]
-- Vérifier : AS dispo + Service a place
-- Action : transfer_escort(patient_id, service)
-
-🎯 **PRIORITÉ 2 : SÉCURITÉ (Surveillance)**
-- Chercher : Salle avec patients MAIS aucun staff > 15 min
-- Action : transfer_staff(staff_dispo, salle_id)
-
-🎯 **PRIORITÉ 3 : ÉVACUER TRIAGE**
-- ROUGE : SC → Consultation → Salle
-- JAUNE/VERT/GRIS : Salle (batch 3-5)
-
-🎯 **PRIORITÉ 4 : OPTIMISATION**
-- Équilibrage salles (optionnel)
-
-=== FORMAT RÉPONSE (JSON) ===
+=== FORMAT DE RÉPONSE ATTENDU (JSON PUR) ===
 {
   "actions": [
     {
       "type": "transfer_escort",
       "patient_id": "PAT_001",
-      "target_room_id": "ortho",
-      "justification": "Boarding → Orthopédie"
+      "target_room_id": "consultation",
+      "justification": "Priorité Rouge vers médecin libre"
+    },
+    {
+      "type": "transfer_staff",
+      "staff_id": "INF_02",
+      "target_room_id": "wr_01",
+      "justification": "Surveillance requise"
     }
   ]
 }
-
-Maximum 5 actions par cycle.
 """
 
 def clean_json_response(raw_text):
@@ -105,17 +109,33 @@ def clean_json_response(raw_text):
         return text
     except: return raw_text
 
+
 def call_llm_api(context_text):
-    try:
-        chat_response = client.chat.complete(
-            model=MODEL_NAME,
-            messages=[{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": context_text}],
-            temperature=0.0,
-        )
-        return clean_json_response(chat_response.choices[0].message.content)
-    except Exception as e:
-        print(f"[ERREUR] Appel API Mistral : {e}")
-        return json.dumps({"actions": []})
+    max_retries = 3
+    base_delay = 3
+
+    for attempt in range(max_retries):
+        try:
+            chat_response = client.chat.complete(
+                model=CURRENT_MODEL,  # Utilise le modèle sélectionné
+                messages=[{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": context_text}],
+                temperature=0.0,
+            )
+            return clean_json_response(chat_response.choices[0].message.content)
+
+        except Exception as e:
+            error_msg = str(e)
+            
+            if "429" in error_msg:
+                wait_time = base_delay * (attempt + 1)
+                print(f"⚠️ [API] Trop rapide (429). Pause de {wait_time}s avant réessai ({attempt + 1}/{max_retries})...")
+                time.sleep(wait_time)
+            else:
+                print(f"🚨 [ERREUR] Appel API Mistral : {e}")
+                return json.dumps({"actions": []})
+
+    print("❌ [ABANDON] Echec API après plusieurs tentatives.")
+    return json.dumps({"actions": []})
 
 def process_brain_cycle():
     try:
@@ -127,7 +147,6 @@ def process_brain_cycle():
         
         free1, free2, free3 = c1.capacity - c1.occupancy, c2.capacity - c2.occupancy, c3.capacity - c3.occupancy
 
-        # État de la consultation
         cons = state.consultation_room
         cons_status = "🟢 LIBRE" if cons.occupancy == 0 else "🔴 OCCUPÉE"
 
@@ -154,19 +173,11 @@ def process_brain_cycle():
 
             logs_output = []
             
-            # Helper pour formater les noms de lieux
             def get_location_name(loc_id):
                 names = {
-                    "triage": "Triage",
-                    "wr_01": "Salle 1",
-                    "wr_02": "Salle 2",
-                    "wr_03": "Salle 3",
-                    "soins_critiques": "Soins Critiques",
-                    "consultation": "Consultation",
-                    "ortho": "Orthopédie",
-                    "cardio": "Cardiologie",
-                    "neuro": "Neurologie",
-                    "pneumo": "Pneumologie"
+                    "triage": "Triage", "wr_01": "Salle 1", "wr_02": "Salle 2", "wr_03": "Salle 3",
+                    "soins_critiques": "Soins Critiques", "consultation": "Consultation",
+                    "ortho": "Orthopédie", "cardio": "Cardiologie", "neuro": "Neurologie", "pneumo": "Pneumologie"
                 }
                 return names.get(loc_id, loc_id)
             
@@ -178,7 +189,6 @@ def process_brain_cycle():
                 res = "Erreur"
                 detailed_log = None
                 
-                # Transfer Basic
                 if action_type == "transfer_basic":
                     if pid and pid in state.patients:
                         patient = state.patients[pid]
@@ -200,7 +210,6 @@ def process_brain_cycle():
                     else:
                         res = transfer_patient_basic(pid, dest)
                 
-                # Transfer Escort
                 elif action_type == "transfer_escort":
                     if pid and pid in state.patients:
                         patient = state.patients[pid]
@@ -210,14 +219,12 @@ def process_brain_cycle():
                         res = transfer_patient_with_escort(pid, dest)
                         
                         if "✅" in res:
-                            # Extraire l'AS du message de résultat
                             as_match = re.search(r'escorté par (AS_\d+)', res)
                             as_id = as_match.group(1) if as_match else "AS"
                             
                             from_name = get_location_name(from_loc)
                             to_name = get_location_name(dest)
                             
-                            # Déterminer la durée selon la destination
                             if dest == "consultation":
                                 duration = 5
                             elif dest in ["ortho", "cardio", "neuro", "pneumo"]:
@@ -229,7 +236,6 @@ def process_brain_cycle():
                     else:
                         res = transfer_patient_with_escort(pid, dest)
                 
-                # Transfer Staff
                 elif action_type == "transfer_staff":
                     if not sid: continue
                     
@@ -248,7 +254,6 @@ def process_brain_cycle():
                     else:
                         res = transfer_staff(sid, dest)
                 
-                # Ajouter le log (enrichi si disponible, sinon standard)
                 if detailed_log and "✅" in res:
                     logs_output.append(detailed_log)
                 elif "⚠️ Déjà" not in res and "introuvable" not in res:
