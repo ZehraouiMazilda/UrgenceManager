@@ -1,5 +1,5 @@
 """
-Module de simulation - VERSION ULTRA-FINALE (CORRIGÉE & UNIFIÉE)
+Module de simulation
 Intègre : Simulation + Gestion Scénarios (Fix Pydantic) + Verrouillage UI
 """
 
@@ -1947,4 +1947,5 @@ def show_ai_assistant_chat(base_dir, state):
                 {"role": "assistant", "content": response}
             )
             st.rerun()
+
 
