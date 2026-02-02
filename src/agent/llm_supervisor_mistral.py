@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from dotenv import load_dotenv
 import os
@@ -11,7 +11,7 @@ import os
 from mistralai import Mistral
 
 
-DEFAULT_SYSTEM_PROMPT_PATH = Path("prompts/llm_supervisor_system.md")
+DEFAULT_SYSTEM_PROMPT_PATH: Path = Path("prompts/llm_supervisor_system.md")
 
 
 class LLMOutputError(ValueError):
@@ -45,15 +45,15 @@ def run_llm_supervisor(
     Calls Mistral API and returns the supervisor JSON.
     """
     load_dotenv()
-    api_key = os.getenv("MISTRAL_API_KEY")
+    api_key: str | None = os.getenv("MISTRAL_API_KEY")
     if not api_key:
         raise RuntimeError("MISTRAL_API_KEY missing. Put it in .env and restart terminal.")
 
-    system_prompt = load_system_prompt(system_prompt_path)
+    system_prompt: str = load_system_prompt(system_prompt_path)
 
-    client = Mistral(api_key=api_key)
+    client: Mistral = Mistral(api_key=api_key)
 
-    user_content = json.dumps(payload, ensure_ascii=False)
+    user_content: str = json.dumps(payload, ensure_ascii=False)
 
     # Chat API
     resp = client.chat.complete(
@@ -65,15 +65,15 @@ def run_llm_supervisor(
         temperature=temperature,
     )
 
-    content = resp.choices[0].message.content
+    content: Any = resp.choices[0].message.content
     if not isinstance(content, str):
         # Sometimes SDK returns structured; force to string
         content = str(content)
 
-    out = _safe_json_loads(content)
+    out: Dict[str, Any] = _safe_json_loads(content)
 
     # Minimal schema checks (strict)
-    required_keys = ["summary_fr", "risks", "recommended_actions", "communication_to_staff"]
+    required_keys: List[str] = ["summary_fr", "risks", "recommended_actions", "communication_to_staff"]
     for k in required_keys:
         if k not in out:
             raise LLMOutputError(f"Missing key '{k}' in LLM output. Output was: {out}")

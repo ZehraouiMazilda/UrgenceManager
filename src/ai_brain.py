@@ -3,6 +3,7 @@ import os
 import json
 import re
 import time  
+from typing import Optional, Dict, List, Any
 from dotenv import load_dotenv
 from mistralai import Mistral
 from src.tools import (
@@ -17,20 +18,20 @@ from src.tools import (
 )
 
 load_dotenv()
-api_key = os.getenv("MISTRAL_API_KEY")
+api_key: Optional[str] = os.getenv("MISTRAL_API_KEY")
 if not api_key: api_key = "dummy_key"
 
-client = Mistral(api_key=api_key)
+client: Mistral = Mistral(api_key=api_key)
 
 # MODÈLE PAR DÉFAUT (sera modifié dynamiquement)
-CURRENT_MODEL = "mistral-large-latest"
+CURRENT_MODEL: str = "mistral-large-latest"
 
-def set_llm_model(model_name):
+def set_llm_model(model_name: str) -> None:
     """Change le modèle LLM utilisé"""
     global CURRENT_MODEL
     CURRENT_MODEL = model_name
 
-SYSTEM_PROMPT = """
+SYSTEM_PROMPT: str = """
 Tu es le CHEF DE RÉGULATION DES URGENCES HOSPITALIÈRES.
 Ta mission : Piloter le flux patient en respectant STRICTEMENT les protocoles médicaux et logistiques.
 
@@ -100,19 +101,19 @@ Ta mission : Piloter le flux patient en respectant STRICTEMENT les protocoles m�
 }
 """
 
-def clean_json_response(raw_text):
+def clean_json_response(raw_text: str) -> str:
     try:
-        text = raw_text.replace("```json", "").replace("```", "").strip()
-        start_idx = text.find('{'); end_idx = text.rfind('}')
+        text: str = raw_text.replace("```json", "").replace("```", "").strip()
+        start_idx: int = text.find('{'); end_idx: int = text.rfind('}')
         if start_idx != -1 and end_idx != -1: text = text[start_idx : end_idx + 1]
         text = text.replace('\n', ' ').replace('\r', '')
         return text
     except: return raw_text
 
 
-def call_llm_api(context_text):
-    max_retries = 3
-    base_delay = 3
+def call_llm_api(context_text: str) -> str:
+    max_retries: int = 3
+    base_delay: int = 3
 
     for attempt in range(max_retries):
         try:
@@ -124,10 +125,10 @@ def call_llm_api(context_text):
             return clean_json_response(chat_response.choices[0].message.content)
 
         except Exception as e:
-            error_msg = str(e)
+            error_msg: str = str(e)
             
             if "429" in error_msg:
-                wait_time = base_delay * (attempt + 1)
+                wait_time: int = base_delay * (attempt + 1)
                 print(f"⚠️ [API] Trop rapide (429). Pause de {wait_time}s avant réessai ({attempt + 1}/{max_retries})...")
                 time.sleep(wait_time)
             else:
@@ -137,20 +138,23 @@ def call_llm_api(context_text):
     print("❌ [ABANDON] Echec API après plusieurs tentatives.")
     return json.dumps({"actions": []})
 
-def process_brain_cycle():
+def process_brain_cycle() -> Optional[str]:
     try:
         state = _get_state()
-        dashboard = get_hospital_dashboard()
+        dashboard: str = get_hospital_dashboard()
         
         c1, c2, c3 = state.waiting_rooms['wr_01'], state.waiting_rooms['wr_02'], state.waiting_rooms['wr_03']
         sc = state.soins_critiques
         
+        free1: int
+        free2: int
+        free3: int
         free1, free2, free3 = c1.capacity - c1.occupancy, c2.capacity - c2.occupancy, c3.capacity - c3.occupancy
 
         cons = state.consultation_room
-        cons_status = "🟢 LIBRE" if cons.occupancy == 0 else "🔴 OCCUPÉE"
+        cons_status: str = "🟢 LIBRE" if cons.occupancy == 0 else "🔴 OCCUPÉE"
 
-        details = "\n".join([
+        details: str = "\n".join([
             f"TRIAGE (En attente: {len(state.triage_zone.patients)}):\n{get_patient_list('triage')}",
             f"\nCONSULTATION [{cons_status}]:\n{get_patient_list('consultation')}",
             f"\nSALLE 1 (wr_01) [Places Libres: {free1}/{c1.capacity}]:\n{get_patient_list('wr_01')}",
@@ -159,22 +163,22 @@ def process_brain_cycle():
             f"\nSOINS CRITIQUES [Occupé: {sc.occupancy}/{sc.capacity}]:\n{get_patient_list('soins_critiques')}"
         ])
         
-        staff_info = f"INFIRMIERS:\n{get_staff_directory()}\n\nAIDES-SOIGNANTS:\n{get_as_directory()}"
+        staff_info: str = f"INFIRMIERS:\n{get_staff_directory()}\n\nAIDES-SOIGNANTS:\n{get_as_directory()}"
         
-        full_prompt = f"{dashboard}\n\n=== RESSOURCES ===\n{staff_info}\n\n=== PATIENTS & CAPACITÉS ===\n{details}"
+        full_prompt: str = f"{dashboard}\n\n=== RESSOURCES ===\n{staff_info}\n\n=== PATIENTS & CAPACITÉS ===\n{details}"
 
-        llm_response_str = call_llm_api(full_prompt)
+        llm_response_str: str = call_llm_api(full_prompt)
         print(f"\n🧠 [IA RAW]: {llm_response_str}\n")
         
         try:
-            decision = json.loads(llm_response_str, strict=False)
-            actions_list = decision.get("actions", [])
+            decision: Dict[str, Any] = json.loads(llm_response_str, strict=False)
+            actions_list: List[Dict[str, Any]] = decision.get("actions", [])
             if not actions_list: return None 
 
-            logs_output = []
+            logs_output: List[str] = []
             
-            def get_location_name(loc_id):
-                names = {
+            def get_location_name(loc_id: str) -> str:
+                names: Dict[str, str] = {
                     "triage": "Triage", "wr_01": "Salle 1", "wr_02": "Salle 2", "wr_03": "Salle 3",
                     "soins_critiques": "Soins Critiques", "consultation": "Consultation",
                     "ortho": "Orthopédie", "cardio": "Cardiologie", "neuro": "Neurologie", "pneumo": "Pneumologie"
@@ -182,26 +186,30 @@ def process_brain_cycle():
                 return names.get(loc_id, loc_id)
             
             for act in actions_list:
-                action_type = act.get("type")
+                action_type: Optional[str] = act.get("type")
+                pid: Optional[str]
+                sid: Optional[str]
                 pid, sid = act.get("patient_id"), act.get("staff_id")
+                dest: Optional[str]
+                justif: str
                 dest, justif = act.get("target_room_id"), act.get("justification", "Auto")
 
-                res = "Erreur"
-                detailed_log = None
+                res: str = "Erreur"
+                detailed_log: Optional[str] = None
                 
                 if action_type == "transfer_basic":
                     if pid and pid in state.patients:
                         patient = state.patients[pid]
-                        from_loc = patient.location
-                        severity = patient.severity.value if hasattr(patient.severity, 'value') else str(patient.severity)
+                        from_loc: str = patient.location
+                        severity: str = patient.severity.value if hasattr(patient.severity, 'value') else str(patient.severity)
                         
                         res = transfer_patient_basic(pid, dest)
                         
                         if "✅" in res:
-                            severity_icons = {"ROUGE": "🔴", "JAUNE": "🟡", "VERT": "🟢", "GRIS": "⚪"}
-                            icon = severity_icons.get(severity, "")
-                            from_name = get_location_name(from_loc)
-                            to_name = get_location_name(dest)
+                            severity_icons: Dict[str, str] = {"ROUGE": "🔴", "JAUNE": "🟡", "VERT": "🟢", "GRIS": "⚪"}
+                            icon: str = severity_icons.get(severity, "")
+                            from_name: str = get_location_name(from_loc)
+                            to_name: str = get_location_name(dest)
                             
                             detailed_log = f"{icon} **{pid}** ({severity}) : {from_name} → {to_name}"
                             
@@ -213,18 +221,19 @@ def process_brain_cycle():
                 elif action_type == "transfer_escort":
                     if pid and pid in state.patients:
                         patient = state.patients[pid]
-                        from_loc = patient.location
-                        severity = patient.severity.value if hasattr(patient.severity, 'value') else str(patient.severity)
+                        from_loc: str = patient.location
+                        severity: str = patient.severity.value if hasattr(patient.severity, 'value') else str(patient.severity)
                         
                         res = transfer_patient_with_escort(pid, dest)
                         
                         if "✅" in res:
-                            as_match = re.search(r'escorté par (AS_\d+)', res)
-                            as_id = as_match.group(1) if as_match else "AS"
+                            as_match: Optional[re.Match[str]] = re.search(r'escorté par (AS_\d+)', res)
+                            as_id: str = as_match.group(1) if as_match else "AS"
                             
-                            from_name = get_location_name(from_loc)
-                            to_name = get_location_name(dest)
+                            from_name: str = get_location_name(from_loc)
+                            to_name: str = get_location_name(dest)
                             
+                            duration: Any
                             if dest == "consultation":
                                 duration = 5
                             elif dest in ["ortho", "cardio", "neuro", "pneumo"]:
@@ -241,14 +250,14 @@ def process_brain_cycle():
                     
                     if sid in state.staff:
                         agent = state.staff[sid]
-                        from_loc = agent.location
+                        from_loc: str = agent.location
                         
                         res = transfer_staff(sid, dest)
                         
                         if "✅" in res:
-                            icon = "👩‍⚕️" if "INF" in sid else "🚑"
-                            from_name = get_location_name(from_loc)
-                            to_name = get_location_name(dest)
+                            icon: str = "👩‍⚕️" if "INF" in sid else "🚑"
+                            from_name: str = get_location_name(from_loc)
+                            to_name: str = get_location_name(dest)
                             
                             detailed_log = f"{icon} **{sid}** : {from_name} → {to_name} (surveillance)"
                     else:

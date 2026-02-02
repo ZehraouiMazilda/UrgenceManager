@@ -15,9 +15,9 @@ from src.triage.compute_severity import compute_severity
 # -------------------------
 # Persistent file locations
 # -------------------------
-ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_PATIENTS_PATH = ROOT / "data" / "patients" / "patients_seed.json"
-DEFAULT_HOSPITAL_PATH = ROOT / "data" / "hospital" / "hospital_state.json"
+ROOT: Path = Path(__file__).resolve().parents[2]
+DEFAULT_PATIENTS_PATH: Path = ROOT / "data" / "patients" / "patients_seed.json"
+DEFAULT_HOSPITAL_PATH: Path = ROOT / "data" / "hospital" / "hospital_state.json"
 
 
 # -------------------------
@@ -39,7 +39,7 @@ def _ensure_loaded() -> None:
 
 
 def _room_has_space(hospital: Dict[str, Any], room: str) -> bool:
-    r = hospital["rooms"].get(room)
+    r: Optional[Dict[str, Any]] = hospital["rooms"].get(room)
     if not r:
         return False
     return int(r.get("occupied", 0)) < int(r.get("capacity", 0))
@@ -63,7 +63,7 @@ def _normalize_room(room: str) -> str:
     return str(room).strip()
 
 
-mcp = FastMCP("hospital_tools")
+mcp: FastMCP = FastMCP("hospital_tools")
 
 
 # -------------------------
@@ -78,11 +78,11 @@ def init_state(
     Load patients + hospital state into memory for this run.
     Must be called before other tools.
     """
-    p_path = Path(patients_path)
-    h_path = Path(hospital_path)
+    p_path: Path = Path(patients_path)
+    h_path: Path = Path(hospital_path)
 
-    patients = json.loads(p_path.read_text(encoding="utf-8"))
-    hospital = json.loads(h_path.read_text(encoding="utf-8"))
+    patients: List[Dict[str, Any]] = json.loads(p_path.read_text(encoding="utf-8"))
+    hospital: Dict[str, Any] = json.loads(h_path.read_text(encoding="utf-8"))
 
     # Ensure baseline fields
     if "timestamp" not in hospital:
@@ -124,7 +124,7 @@ def list_patients(
         if status and p.get("statut") != status:
             continue
         if severity:
-            sev = compute_severity(p).severity
+            sev: str = compute_severity(p).severity
             if sev != severity:
                 continue
 
@@ -145,8 +145,8 @@ def list_patients(
 @mcp.tool()
 def get_patient(patient_id: str) -> Dict[str, Any]:
     """Get full patient record + triage result."""
-    p = _find_patient(patient_id)
-    out = deepcopy(p)
+    p: Dict[str, Any] = _find_patient(patient_id)
+    out: Dict[str, Any] = deepcopy(p)
     out["triage_v1"] = compute_severity(p).to_dict()
     return out
 
@@ -154,7 +154,7 @@ def get_patient(patient_id: str) -> Dict[str, Any]:
 @mcp.tool()
 def compute_severity_tool(patient_id: str) -> Dict[str, Any]:
     """Compute severity for one patient (symptoms-only V1)."""
-    p = _find_patient(patient_id)
+    p: Dict[str, Any] = _find_patient(patient_id)
     return compute_severity(p).to_dict()
 
 
@@ -165,8 +165,8 @@ def move_patient(patient_id: str, target_location: str) -> Dict[str, Any]:
     Use assign_room for room moves with capacity.
     """
     _ensure_loaded()
-    p = _find_patient(patient_id)
-    old = p.get("localisation")
+    p: Dict[str, Any] = _find_patient(patient_id)
+    old: Optional[str] = p.get("localisation")
     p["localisation"] = target_location
     return {"patient_id": patient_id, "from": old, "to": target_location, "ok": True}
 
@@ -178,8 +178,8 @@ def assign_room(patient_id: str, room: str) -> Dict[str, Any]:
     If patient was in another tracked room, we free it.
     """
     _ensure_loaded()
-    hospital = _STATE["hospital"]
-    p = _find_patient(patient_id)
+    hospital: Dict[str, Any] = _STATE["hospital"]
+    p: Dict[str, Any] = _find_patient(patient_id)
 
     room = _normalize_room(room)
     if room not in hospital["rooms"]:
@@ -189,7 +189,7 @@ def assign_room(patient_id: str, room: str) -> Dict[str, Any]:
     if room != "attente" and not _room_has_space(hospital, room):
         return {"ok": False, "error": f"Room '{room}' is full", "patient_id": patient_id, "room": room}
 
-    old_loc = p.get("localisation")
+    old_loc: Optional[str] = p.get("localisation")
 
     # Free old room occupancy if it was a tracked room
     if old_loc in hospital["rooms"]:
@@ -221,9 +221,9 @@ def assign_room(patient_id: str, room: str) -> Dict[str, Any]:
 def discharge_patient(patient_id: str, reason: str = "") -> Dict[str, Any]:
     """Discharge patient (free room if needed)."""
     _ensure_loaded()
-    hospital = _STATE["hospital"]
-    p = _find_patient(patient_id)
-    old_loc = p.get("localisation")
+    hospital: Dict[str, Any] = _STATE["hospital"]
+    p: Dict[str, Any] = _find_patient(patient_id)
+    old_loc: Optional[str] = p.get("localisation")
     if old_loc in hospital["rooms"]:
         _occupy_room(hospital, old_loc, delta=-1)
     p["localisation"] = "sortie"
@@ -238,12 +238,12 @@ def move_staff(role: str, from_area: str, to_area: str, count: int = 1) -> Dict[
     V1: we only log; we do not enforce complex constraints.
     """
     _ensure_loaded()
-    hospital = _STATE["hospital"]
-    staff = hospital.setdefault("staff", {})
-    key = str(role).strip()
+    hospital: Dict[str, Any] = _STATE["hospital"]
+    staff: Dict[str, Any] = hospital.setdefault("staff", {})
+    key: str = str(role).strip()
 
     # This tool doesn't track per-area staff in V1; it records an ops log.
-    log = hospital.setdefault("ops_log", [])
+    log: List[Dict[str, Any]] = hospital.setdefault("ops_log", [])
     log.append(
         {
             "time": hospital.get("timestamp", _now_iso()),
@@ -264,9 +264,9 @@ def tick(minutes: int = 5) -> Dict[str, Any]:
     V1 simulation: each tick frees 1 slot in consultation if occupied > 0.
     """
     _ensure_loaded()
-    hospital = _STATE["hospital"]
-    t = datetime.fromisoformat(hospital.get("timestamp", _now_iso()))
-    t2 = t + timedelta(minutes=int(minutes))
+    hospital: Dict[str, Any] = _STATE["hospital"]
+    t: datetime = datetime.fromisoformat(hospital.get("timestamp", _now_iso()))
+    t2: datetime = t + timedelta(minutes=int(minutes))
     hospital["timestamp"] = t2.isoformat(timespec="seconds")
 
     # Simple simulation rule: consultation frees 1 spot per tick (if occupied > 0)

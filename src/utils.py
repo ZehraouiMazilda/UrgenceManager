@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Dict, Any
 from src.models import StateFile, HospitalState
 
 def load_initial_state(json_path: str) -> HospitalState:
@@ -11,18 +12,18 @@ def load_initial_state(json_path: str) -> HospitalState:
         raise FileNotFoundError(f"Fichier introuvable : {json_path}")
     
     with open(json_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+        data: Dict[str, Any] = json.load(f)
     
     # 1. Validation stricte avec le nouveau modèle StateFile
     try:
-        full_file = StateFile(**data)
+        full_file: StateFile = StateFile(**data)
         print("✅ État et Constantes chargés avec succès.")
         return full_file.state
     except Exception as e:
         print(f"❌ Erreur de validation Pydantic : {e}")
         raise e
 
-def load_symptoms_config(json_path: str) -> dict:
+def load_symptoms_config(json_path: str) -> Dict[str, Any]:
     """Charge le dictionnaire des symptômes (Ressources_Projet)"""
     if not os.path.exists(json_path):
         return {}
@@ -30,16 +31,18 @@ def load_symptoms_config(json_path: str) -> dict:
         return json.load(f)
     
     
-def save_state(state: HospitalState, json_path: str):
+def save_state(state: HospitalState, json_path: str) -> None:
     """
     Sauvegarde l'état actuel dans le fichier JSON.
     C'est ce que l'Agent utilisera pour appliquer ses décisions.
     """
     # 1. On charge les constantes depuis le fichier existant (pour ne pas les perdre)
     # car l'objet HospitalState ne contient que le 'state', pas les 'constants'
+    constants: Dict[str, Any]
+    hospital_name: str
     if os.path.exists(json_path):
         with open(json_path, "r", encoding="utf-8") as f:
-            raw_data = json.load(f)
+            raw_data: Dict[str, Any] = json.load(f)
             constants = raw_data.get("constants", {})
             hospital_name = raw_data.get("hospital_name", "Hopital")
     else:
@@ -49,7 +52,7 @@ def save_state(state: HospitalState, json_path: str):
 
     # 2. On prépare le dictionnaire complet
     # On utilise model_dump() de Pydantic pour convertir l'objet en dict
-    full_data = {
+    full_data: Dict[str, Any] = {
         "hospital_name": hospital_name,
         "constants": constants,
         "state": state.model_dump()

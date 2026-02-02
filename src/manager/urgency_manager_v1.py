@@ -9,10 +9,10 @@ from typing import Any, Dict, List, Tuple
 from src.triage.compute_severity import compute_severity
 
 
-DEFAULT_HOSPITAL_PATH = Path("data/hospital/hospital_state.json")
+DEFAULT_HOSPITAL_PATH: Path = Path("data/hospital/hospital_state.json")
 
 
-SEVERITY_RANK = {"ROUGE": 0, "JAUNE": 1, "VERT": 2, "GRIS": 3}
+SEVERITY_RANK: Dict[str, int] = {"ROUGE": 0, "JAUNE": 1, "VERT": 2, "GRIS": 3}
 
 
 def _parse_dt(dt_str: str) -> datetime:
@@ -38,7 +38,7 @@ def _choose_target_room(severity: str, patient: Dict[str, Any], hospital: Dict[s
     Additionally, uses type_maladie as a hint for ROUGE routing:
       cardio -> salle_1 fallback, neuro -> salle_3 fallback, resp -> salle_2 fallback
     """
-    rooms = hospital["rooms"]
+    rooms: Dict[str, Any] = hospital["rooms"]
 
     if severity == "GRIS":
         return "sortie", "GRIS: ne nécessite pas les urgences (orientation hors urgences)"
@@ -58,8 +58,8 @@ def _choose_target_room(severity: str, patient: Dict[str, Any], hospital: Dict[s
         return "soins_critiques", "ROUGE: vital -> soins critiques"
 
     # Fallbacks for ROUGE
-    type_maladie = patient.get("type_maladie", [])
-    type_maladie_str = " ".join(type_maladie).lower() if isinstance(type_maladie, list) else str(type_maladie).lower()
+    type_maladie: Any = patient.get("type_maladie", [])
+    type_maladie_str: str = " ".join(type_maladie).lower() if isinstance(type_maladie, list) else str(type_maladie).lower()
 
     # specialty fallback
     if "cardio" in type_maladie_str and _room_has_space(rooms["salle_1"]):
@@ -105,15 +105,15 @@ def urgency_manager_v1(
     - produces actions + queue + alerts + metrics
     """
     # Copy hospital state shallowly to update occupancy safely
-    hospital = json.loads(json.dumps(hospital_state))
+    hospital: Dict[str, Any] = json.loads(json.dumps(hospital_state))
 
     # Enrich patients with severity results
     enriched: List[Dict[str, Any]] = []
     by_sev: Dict[str, int] = {"GRIS": 0, "VERT": 0, "JAUNE": 0, "ROUGE": 0}
 
     for p in patients:
-        sev_res = compute_severity(p).to_dict()
-        sev = sev_res["severity"]
+        sev_res: Dict[str, Any] = compute_severity(p).to_dict()
+        sev: str = sev_res["severity"]
         by_sev[sev] = by_sev.get(sev, 0) + 1
 
         enriched.append(
@@ -135,13 +135,15 @@ def urgency_manager_v1(
 
     # Decide for each patient in priority order
     for idx, item in enumerate(enriched, start=1):
-        p = item["patient"]
-        sev = item["severity"]
+        p: Dict[str, Any] = item["patient"]
+        sev: str = item["severity"]
 
+        target: str
+        justification: str
         target, justification = _choose_target_room(sev, p, hospital)
 
         # Update patient location & status for action output (V1: simplistic)
-        action = {
+        action: Dict[str, Any] = {
             "type": "assign_room",
             "patient_id": p["id"],
             "severity": sev,
@@ -173,13 +175,13 @@ def urgency_manager_v1(
         if target in ("attente", "consultation"):
             queue.append({"patient_id": p["id"], "severity": sev, "rank": idx, "target": target})
 
-    metrics = {
+    metrics: Dict[str, Any] = {
         "patients_total": len(patients),
         "by_severity": by_sev,
         "rooms_after": hospital["rooms"],
     }
 
-    timestamp = hospital_state.get("timestamp", datetime.now().isoformat(timespec="seconds"))
+    timestamp: str = hospital_state.get("timestamp", datetime.now().isoformat(timespec="seconds"))
 
     return ManagerDecision(
         timestamp=timestamp,

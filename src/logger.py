@@ -1,12 +1,13 @@
 import json
 import os
 import datetime
+from typing import Optional, Union, Any
 import streamlit as st
 import pandas as pd
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-def log_event(state, event_type, entity_id, location, related_entity=None):
+def log_event(state: Any, event_type: str, entity_id: str, location: str, related_entity: Optional[Union[str, Any]] = None) -> None:
     """
     Log un événement en TEMPS RÉEL dans les CSV de session
     
@@ -23,13 +24,13 @@ def log_event(state, event_type, entity_id, location, related_entity=None):
     if "csv_session_id" not in st.session_state:
         return
     
-    hist_dir = os.path.join(BASE_DIR, "data", "historique")
+    hist_dir: str = os.path.join(BASE_DIR, "data", "historique")
     
     if event_type == "PATIENT":
         pat = state.patients.get(entity_id)
-        sev = pat.severity.value if pat else "UNKNOWN"
+        sev: str = pat.severity.value if pat else "UNKNOWN"
         
-        entry = {
+        entry: dict[str, Any] = {
             "timestamp": state.time,
             "id": entity_id,
             "location": location,
@@ -38,17 +39,17 @@ def log_event(state, event_type, entity_id, location, related_entity=None):
         }
         
         # Append au CSV patients
-        pat_csv = os.path.join(hist_dir, f"{st.session_state.csv_session_id}_patients.csv")
-        df = pd.DataFrame([entry])
+        pat_csv: str = os.path.join(hist_dir, f"{st.session_state.csv_session_id}_patients.csv")
+        df: pd.DataFrame = pd.DataFrame([entry])
         df.to_csv(pat_csv, sep=";", mode='a', header=False, index=False)
 
     elif event_type == "STAFF":
         # related_entity est l'objet Patient complet
-        p_id = related_entity.id if related_entity else None
-        p_symp = related_entity.symptom if related_entity else None
-        p_col = related_entity.severity.value if related_entity else None
+        p_id: Optional[str] = related_entity.id if related_entity else None
+        p_symp: Optional[str] = related_entity.symptom if related_entity else None
+        p_col: Optional[str] = related_entity.severity.value if related_entity else None
         
-        entry = {
+        entry: dict[str, Any] = {
             "timestamp": state.time,
             "id": entity_id,
             "location": location,
@@ -58,6 +59,6 @@ def log_event(state, event_type, entity_id, location, related_entity=None):
         }
         
         # Append au CSV staff
-        staff_csv = os.path.join(hist_dir, f"{st.session_state.csv_session_id}_staff.csv")
-        df = pd.DataFrame([entry])
+        staff_csv: str = os.path.join(hist_dir, f"{st.session_state.csv_session_id}_staff.csv")
+        df: pd.DataFrame = pd.DataFrame([entry])
         df.to_csv(staff_csv, sep=";", mode='a', header=False, index=False)
