@@ -37,7 +37,6 @@ def save_state(state: HospitalState, json_path: str) -> None:
     C'est ce que l'Agent utilisera pour appliquer ses décisions.
     """
     # 1. On charge les constantes depuis le fichier existant (pour ne pas les perdre)
-    # car l'objet HospitalState ne contient que le 'state', pas les 'constants'
     constants: Dict[str, Any]
     hospital_name: str
     if os.path.exists(json_path):
@@ -51,7 +50,6 @@ def save_state(state: HospitalState, json_path: str) -> None:
         hospital_name = "Hopital"
 
     # 2. On prépare le dictionnaire complet
-    # On utilise model_dump() de Pydantic pour convertir l'objet en dict
     full_data: Dict[str, Any] = {
         "hospital_name": hospital_name,
         "constants": constants,
@@ -60,4 +58,5 @@ def save_state(state: HospitalState, json_path: str) -> None:
 
     # 3. Ecriture atomique (pour éviter les conflits de lecture)
     with open(json_path, "w", encoding="utf-8") as f:
+
         json.dump(full_data, f, indent=2, ensure_ascii=False)
