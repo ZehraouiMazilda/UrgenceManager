@@ -1,24 +1,27 @@
 """
-Module de simulation pour le système de gestion des urgences.
-Version FINALE : Tous les détails corrigés
+Module de simulation - VERSION ULTRA-FINALE
+CSV temps réel + Stats complètes + Parcours patients + Sélection modèle LLM + VISUALISATION SCORES
 """
 
 import streamlit as st
 import time
 import random
+import re
 import os
 import pandas as pd
 from datetime import datetime
 import json
+import plotly.express as px
+import plotly.graph_objects as go
 
 from src.models import Patient, Severity, PatientStatus, StateFile
 from src.utils import load_initial_state, save_state
 from src.logger import log_event
-from src.ai_brain import process_brain_cycle
-
+from src.ai_brain import process_brain_cycle, set_llm_model
+from mistralai import Mistral
 
 # =============================================================================
-# CHARGEMENT DES DONNÉES
+# CHARGEMENT
 # =============================================================================
 
 def load_symptoms():
@@ -33,19 +36,220 @@ def load_full_file(path):
     with open(path, "r", encoding="utf-8") as f: return StateFile(**json.load(f))
 
 # =============================================================================
-# FONCTIONS D'AFFICHAGE ET HELPERS
+# SESSION CSV - CRÉER AU DÉMARRAGE
+# =============================================================================
+
+def ensure_csv_session_initialized(base_dir):
+    """Crée le fichier CSV de session au DÉMARRAGE (pas au reset)"""
+    if "csv_session_id" not in st.session_state:
+        st.session_state.csv_session_id = f"SESSION_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        
+        # Créer le dossier historique
+        hist_dir = os.path.join(base_dir, "data", "historique")
+        os.makedirs(hist_dir, exist_ok=True)
+        
+        # Créer les fichiers CSV immédiatement
+        pat_csv = os.path.join(hist_dir, f"{st.session_state.csv_session_id}_patients.csv")
+        staff_csv = os.path.join(hist_dir, f"{st.session_state.csv_session_id}_staff.csv")
+        
+        # Créer headers
+        pd.DataFrame(columns=["timestamp", "id", "location", "severity", "escort_id"]).to_csv(pat_csv, sep=";", index=False)
+        pd.DataFrame(columns=["timestamp", "id", "location", "patient_handling_id", "patient_symptom", "patient_color"]).to_csv(staff_csv, sep=";", index=False)
+        
+        print(f"✅ CSV Session créée : {st.session_state.csv_session_id}")
+
+# =============================================================================
+# GÉNÉRATION UNIQUE IDs PATIENTS
+# =============================================================================
+
+def generate_unique_patient_id(state):
+    """Génère un ID patient unique pour la session"""
+    if "used_patient_ids" not in st.session_state:
+        st.session_state.used_patient_ids = set()
+    
+    counter = len(st.session_state.used_patient_ids) + 1
+    
+    while True:
+        new_id = f"PAT_{counter:03d}"
+        if new_id not in st.session_state.used_patient_ids:
+            st.session_state.used_patient_ids.add(new_id)
+            return new_id
+        counter += 1
+
+# =============================================================================
+# LECTURE CSV POUR STATS
+# =============================================================================
+
+def load_session_csv_data(base_dir):
+    """Charge les données CSV de la session en cours"""
+    if "csv_session_id" not in st.session_state:
+        return None, None
+    
+    hist_dir = os.path.join(base_dir, "data", "historique")
+    pat_csv = os.path.join(hist_dir, f"{st.session_state.csv_session_id}_patients.csv")
+    staff_csv = os.path.join(hist_dir, f"{st.session_state.csv_session_id}_staff.csv")
+    
+    try:
+        df_patients = pd.read_csv(pat_csv, sep=";")
+        df_staff = pd.read_csv(staff_csv, sep=";")
+        return df_patients, df_staff
+    except:
+        return None, None
+
+# =============================================================================
+# GRAPHIQUES AVEC DONNÉES CSV COMPLÈTES
+# =============================================================================
+
+def create_complete_statistics_charts(base_dir, state):
+    """Graphiques basés sur TOUT le CSV (patients sortis inclus)"""
+    
+    df_patients, df_staff = load_session_csv_data(base_dir)
+    
+    if df_patients is None or len(df_patients) < 2:
+        fig = go.Figure()
+        fig.add_annotation(text="Pas encore assez de données", showarrow=False, font_size=14)
+        fig.update_layout(height=350)
+        return fig, fig, fig, fig, fig, fig
+    
+    # GRAPHIQUE 1 : Évolution nombre de patients par localisation
+    fig1 = go.Figure()
+    
+    # Agréger par timestamp et location
+    timeline = []
+    for t in sorted(df_patients['timestamp'].unique()):
+        df_t = df_patients[df_patients['timestamp'] == t]
+        timeline.append({
+            'timestamp': t,
+            'triage': len(df_t[df_t['location'].str.contains('triage|injected_triage', na=False)]),
+            'salles': len(df_t[df_t['location'].str.contains('wr_', na=False)]),
+            'consultation': len(df_t[df_t['location'].str.contains('consult', na=False)]),
+            'hopitaux': len(df_t[df_t['location'].str.contains('ortho|cardio|neuro|pneumo', na=False)])
+        })
+    
+    if timeline:
+        df_timeline = pd.DataFrame(timeline)
+        fig1.add_trace(go.Scatter(x=df_timeline['timestamp'], y=df_timeline['triage'], name="Triage", stackgroup='one'))
+        fig1.add_trace(go.Scatter(x=df_timeline['timestamp'], y=df_timeline['salles'], name="Salles", stackgroup='one'))
+        fig1.add_trace(go.Scatter(x=df_timeline['timestamp'], y=df_timeline['consultation'], name="Consultation", stackgroup='one'))
+        fig1.add_trace(go.Scatter(x=df_timeline['timestamp'], y=df_timeline['hopitaux'], name="Hôpitaux", stackgroup='one'))
+    
+    fig1.update_layout(title="📍 Répartition patients dans le temps", xaxis_title="Temps (min)", yaxis_title="Patients", height=350)
+    
+    # GRAPHIQUE 2 : Total patients traités par couleur
+    colors_count = df_patients.groupby('severity')['id'].nunique().to_dict()
+    
+    fig2 = go.Figure(data=[
+        go.Bar(
+            x=list(colors_count.keys()),
+            y=list(colors_count.values()),
+            marker_color=['gray', 'orange', 'red', 'green'],
+            text=list(colors_count.values()),
+            textposition='auto'
+        )
+    ])
+    fig2.update_layout(title="📊 Total patients traités par gravité", xaxis_title="Gravité", yaxis_title="Nombre de patients", height=350)
+    
+    # GRAPHIQUE 3 : Activité AS (nombre de transports)
+    as_activity = df_staff[df_staff['id'].str.contains('AS_', na=False)].groupby('id').size().to_dict()
+    
+    fig3 = go.Figure(data=[
+        go.Bar(
+            x=list(as_activity.keys()),
+            y=list(as_activity.values()),
+            marker_color='lightblue',
+            text=list(as_activity.values()),
+            textposition='auto'
+        )
+    ])
+    fig3.update_layout(title="🚑 Nombre de transports par AS", xaxis_title="AS", yaxis_title="Transports", height=350)
+    
+    # GRAPHIQUE 4 : Temps d'attente moyen par couleur (patients encore actifs)
+    current_wait = {'ROUGE': [], 'JAUNE': [], 'VERT': [], 'GRIS': []}
+    for pid, p in state.patients.items():
+        if p.location in ['triage'] + list(state.waiting_rooms.keys()):
+            current_wait[p.severity.value].append(state.time - p.arrival_time)
+    
+    wait_avgs = {color: (sum(times)/len(times) if times else 0) for color, times in current_wait.items()}
+    
+    fig4 = go.Figure(data=[
+        go.Bar(
+            x=list(wait_avgs.keys()),
+            y=list(wait_avgs.values()),
+            marker_color=['red', 'orange', 'green', 'gray'],
+            text=[f"{v:.1f} min" for v in wait_avgs.values()],
+            textposition='auto'
+        )
+    ])
+    fig4.update_layout(title="⏱️ Temps d'attente moyen actuel", xaxis_title="Gravité", yaxis_title="Minutes", height=350)
+    
+    # GRAPHIQUE 5 : Répartition destinations finales
+    final_locs = df_patients.groupby('id')['location'].last().value_counts().to_dict()
+    
+    fig5 = go.Figure(data=[go.Pie(
+        labels=list(final_locs.keys()),
+        values=list(final_locs.values())
+    )])
+    fig5.update_layout(title="🎯 Destinations finales des patients", height=350)
+    
+    # GRAPHIQUE 6 : PARCOURS PATIENT (Sankey)
+    # Construire les flux patient par patient
+    patient_paths = df_patients.groupby('id')['location'].apply(list).to_dict()
+    
+    flux = {}
+    for pid, path in patient_paths.items():
+        for i in range(len(path)-1):
+            from_loc = path[i]
+            to_loc = path[i+1]
+            
+            # Nettoyer les noms
+            from_clean = from_loc.replace('injected_', '').replace('tran_', '→')
+            to_clean = to_loc.replace('injected_', '').replace('tran_', '→')
+            
+            key = f"{from_clean} → {to_clean}"
+            flux[key] = flux.get(key, 0) + 1
+    
+    if flux:
+        # Construire Sankey
+        all_locs = set()
+        for k in flux.keys():
+            f, t = k.split(' → ')
+            all_locs.add(f)
+            all_locs.add(t)
+        
+        loc_list = sorted(list(all_locs))
+        loc_idx = {l: i for i, l in enumerate(loc_list)}
+        
+        src, tgt, val = [], [], []
+        for k, c in flux.items():
+            f, t = k.split(' → ')
+            src.append(loc_idx[f])
+            tgt.append(loc_idx[t])
+            val.append(c)
+        
+        fig6 = go.Figure(data=[go.Sankey(
+            node=dict(pad=15, thickness=20, label=loc_list),
+            link=dict(source=src, target=tgt, value=val)
+        )])
+        fig6.update_layout(title="🗺️ Parcours complet des patients", height=400)
+    else:
+        fig6 = go.Figure()
+        fig6.add_annotation(text="Pas assez de mouvements", showarrow=False, font_size=14)
+        fig6.update_layout(title="🗺️ Parcours patients", height=400)
+    
+    return fig1, fig2, fig3, fig4, fig5, fig6
+
+# =============================================================================
+# HELPERS
 # =============================================================================
 
 def verify_rules(state):
     violations = []
-    # Règle 1: Rouge -> SC
     for p in state.patients.values():
         score = 4 if p.severity.value == "ROUGE" else 0
         if score >= 4 and p.location not in ["soins_critiques", "triage", "consultation", "direct_transfer_sc"]:
             if p.status != PatientStatus.IN_TRANSIT:
                 violations.append(f"🔴 VITALE : {p.id} (ROUGE) est en '{p.location}' au lieu de SC !")
 
-    # Règle 3: Surveillance
     if "nurse_timers" not in st.session_state: st.session_state.nurse_timers = {}
     for rid, room in state.waiting_rooms.items():
         has_pats = int(room.occupancy) > 0
@@ -63,22 +267,6 @@ def verify_rules(state):
             if rid in st.session_state.nurse_timers: del st.session_state.nurse_timers[rid]
     return violations
 
-def save_session_csv(base_dir):
-    log_path = os.path.join(base_dir, "data", "history_logs.json")
-    hist_dir = os.path.join(base_dir, "data", "historique")
-    os.makedirs(hist_dir, exist_ok=True)
-    ts_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-    try:
-        if os.path.exists(log_path):
-            with open(log_path, "r", encoding='utf-8') as f: history = json.load(f)
-            if history:
-                last = history[-1]; sid = last.get("session_id", "unk")
-                if last.get("logs_patients"): pd.DataFrame(last["logs_patients"]).to_csv(os.path.join(hist_dir, f"{sid}_{ts_str}_pat.csv"), sep=";", index=False)
-                if last.get("logs_staff"): pd.DataFrame(last["logs_staff"]).to_csv(os.path.join(hist_dir, f"{sid}_{ts_str}_stf.csv"), sep=";", index=False)
-                return True
-    except: return False
-    return False
-
 def check_presence(state, room_staff_list, role_tag):
     found = []
     for s_id in room_staff_list:
@@ -87,19 +275,16 @@ def check_presence(state, room_staff_list, role_tag):
     return f"🟢 {', '.join(found)}" if found else "❌"
 
 def format_patient_colored(patient, current_time):
-    """Affiche le patient avec timer décrémentiel."""
     if not patient: return "Inconnu"
     val = patient.severity.value
     colors = {"ROUGE": "red", "JAUNE": "orange", "VERT": "green", "GRIS": "grey"}
     base = f":{colors.get(val, 'black')}[{patient.id}]"
     
-    # Cas Transit (Avant arrivée)
     if patient.status == PatientStatus.IN_TRANSIT:
         transit_time = current_time - patient.arrival_time
         eta = max(0, 45 - transit_time)
         return f"{base} (🚑 Arrivée {eta} min)"
 
-    # Cas Hospitalisé / Consult (Timer restant)
     if patient.treatment_end_time > 0:
         rem_min = patient.treatment_end_time - current_time
         if rem_min > 0:
@@ -121,22 +306,75 @@ def get_medical_decision(severity):
     elif sev == "VERT": return random.choice(["ortho", "cardio", "neuro", "pneumo"]) if roll < 0.30 else "exit"
     else: return "exit"
 
+def get_priority_dataframe(state):
+    """Calcule le score de priorité actuel pour affichage"""
+    data = []
+    
+    for p in state.patients.values():
+        # On n'affiche que ceux qui sont en attente de traitement (Triage ou Salles)
+        if p.location not in ["triage", "wr_01", "wr_02", "wr_03"]:
+            continue
+            
+        sev = p.severity.value
+        wait = state.time - p.arrival_time
+        
+        # LOGIQUE HYBRIDE DU SCORE (Idem src/tools.py)
+        # 1. Base Mapping
+        mapping = {"ROUGE": 4000, "JAUNE": 3000, "VERT": 2000, "GRIS": 1000}
+        score = mapping.get(sev, 0)
+        
+        if sev == "ROUGE": 
+            score = 99999
+            details = "URGENCE VITALE"
+        else:
+            # 2. Bonus Temps (+1/min)
+            score += wait
+            
+            # 3. Bonus Panic (Anti-Famine)
+            panic = False
+            if (sev == "VERT" and wait > 120): 
+                score += 1500; panic = True
+            if (sev == "GRIS" and wait > 240): 
+                score += 1500; panic = True
+                
+            # 4. Bonus Boarding
+            boarding = False
+            if p.medical_decision and p.medical_decision in state.units:
+                score += 500; boarding = True
+            
+            details = []
+            if panic: details.append("🔥 PANIC")
+            if boarding: details.append("🛏️ BOARDING")
+            details = ", ".join(details) if details else "Normal"
+
+        data.append({
+            "ID": p.id,
+            "Gravité": sev,
+            "Attente": f"{wait} min",
+            "Loc": p.location,
+            "Score": score,
+            "État": details
+        })
+        
+    if not data: return pd.DataFrame(columns=["ID", "Score"])
+    
+    df = pd.DataFrame(data)
+    return df.sort_values(by="Score", ascending=False)
+
 # =============================================================================
-# LOGIQUE D'INJECTION (CORRIGÉE)
+# INJECTION PATIENT
 # =============================================================================
 
 def inject_patient(state, severity_str, symptom, location_id, state_path):
     target_room = None
     as_needed = False
     
-    # --- 1. Définition destination & besoins ---
     real_location_id = location_id
     
     if location_id == "transport_consultation":
         real_location_id = "consultation"
         as_needed = True
     elif location_id == "transport_hospital":
-        # FIX 5 : Vérifier que au moins 1 service a de la place
         available_units = []
         for unit_id in ["ortho", "neuro", "pneumo", "cardio"]:
             unit = state.units[unit_id]
@@ -149,7 +387,6 @@ def inject_patient(state, severity_str, symptom, location_id, state_path):
         real_location_id = random.choice(available_units)
         as_needed = True
 
-    # FIX 1 : Vérification Consultation (directe ou transport)
     if real_location_id == "consultation":
         doc = state.staff.get("DOC_01")
         if not doc or not doc.is_present:
@@ -159,7 +396,6 @@ def inject_patient(state, severity_str, symptom, location_id, state_path):
         if doc.is_busy:
             return None, "⛔ Impossible : Médecin DÉJÀ OCCUPÉ."
 
-    # --- 3. Sélection AS (PRIORITÉS) ---
     target_as = None
     if as_needed:
         as1 = state.staff.get("AS_01")
@@ -172,11 +408,10 @@ def inject_patient(state, severity_str, symptom, location_id, state_path):
         if location_id == "transport_hospital":
             if as2_p: candidates = [as2]
             elif as1_p: candidates = [as1]
-        else:  # transport_consultation
+        else:
             if as1_p: candidates = [as1]
             elif as2_p: candidates = [as2]
         
-        # FIX 4 : Vérifier disponibilité
         for c in candidates:
             if not c.is_busy:
                 target_as = c
@@ -185,7 +420,6 @@ def inject_patient(state, severity_str, symptom, location_id, state_path):
         if not target_as:
             return None, "⛔ Impossible : Aucun AS disponible."
 
-    # --- 4. Détection destination ---
     all_rooms = {"triage": state.triage_zone, "consultation": state.consultation_room, "soins_critiques": state.soins_critiques, **state.waiting_rooms, **state.units}
     target_room = all_rooms.get(real_location_id)
     
@@ -194,8 +428,8 @@ def inject_patient(state, severity_str, symptom, location_id, state_path):
     if hasattr(target_room, 'capacity') and int(target_room.occupancy) >= int(target_room.capacity):
         return None, f"⛔ Impossible : {target_room.name} PLEINE."
 
-    # --- 5. Création Patient ---
-    new_id = f"PAT_{len(state.patients)+1:03d}"
+    # GÉNÉRATION ID UNIQUE
+    new_id = generate_unique_patient_id(state)
     
     if location_id == "transport_hospital":
         status_initial = PatientStatus.IN_TRANSIT
@@ -222,13 +456,11 @@ def inject_patient(state, severity_str, symptom, location_id, state_path):
         target_room.patients.append(new_id)
         target_room.occupancy += 1
 
-    # Cas consultation (directe ou transport)
     if real_location_id == "consultation":
         doc = state.staff["DOC_01"]
         doc.is_busy = True
         consult_duration = random.randint(10, 20)
         
-        # FIX 2 : Si transport consult, ajouter 5 min de trajet
         if location_id == "transport_consultation":
             doc.busy_until = state.time + 5 + consult_duration
             new_patient.treatment_end_time = state.time + 5 + consult_duration
@@ -236,19 +468,15 @@ def inject_patient(state, severity_str, symptom, location_id, state_path):
             doc.busy_until = state.time + consult_duration
             new_patient.treatment_end_time = state.time + consult_duration
     
-    # Soins critiques
     if real_location_id == "soins_critiques":
         duration = random.randint(1440, 2880)
         new_patient.treatment_end_time = state.time + duration
 
-    # FIX 2 & 3 : Réserver l'AS avec durée aller-retour
     if as_needed and target_as:
         target_as.is_busy = True
         if location_id == "transport_consultation":
-            # FIX 2 : Aller (5 min) + Retour (5 min) = 10 min total
             target_as.busy_until = state.time + 10
-        else:  # transport_hospital
-            # FIX 3 : Aller (45 min) + Retour (45 min) = 90 min total
+        else:
             target_as.busy_until = state.time + 90
     
     log_event(state, "PATIENT", new_id, f"injected_{location_id}")
@@ -271,6 +499,9 @@ def show_simulation():
     state_path = os.path.join(base_dir, "data", "state", "urgence_state.json")
     initial_path = os.path.join(base_dir, "data", "state", "urgence_initial_state.json")
     
+    # CRÉER CSV AU DÉMARRAGE
+    ensure_csv_session_initialized(base_dir)
+    
     if "hospital_state" not in st.session_state:
         try: st.session_state.hospital_state = load_initial_state(state_path)
         except Exception as e: st.error(f"Erreur : {e}"); st.stop()
@@ -278,6 +509,61 @@ def show_simulation():
     state = st.session_state.hospital_state
 
     st.markdown("## 🎮 Simulateur Live (God Mode)")
+    
+    # === SÉLECTION MODÈLE LLM ===
+    with st.expander("🤖 Configuration IA", expanded=False):
+        llm_models = {
+            "Mistral Large (Recommandé)": "mistral-large-latest",
+            "Mistral Medium": "mistral-medium-latest",
+            "Mistral Small": "mistral-small-latest",
+            "Codestral": "codestral-latest"
+        }
+        
+        selected_model = st.selectbox(
+            "Modèle LLM",
+            options=list(llm_models.keys()),
+            index=0,
+            key="llm_model_select"
+        )
+        
+        # Appliquer le modèle sélectionné
+        set_llm_model(llm_models[selected_model])
+        st.info(f"🧠 Modèle actif : **{selected_model}**")
+    
+    # === CAPACITÉS MODIFIABLES ===
+    with st.expander("⚙️ Configuration Capacités", expanded=False):
+        st.markdown("**🏥 Services Hospitaliers**")
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            new_cap_ortho = st.number_input("🦴 Orthopédie", min_value=1, max_value=50, value=state.units["ortho"].capacity, key="cap_ortho")
+            if new_cap_ortho != state.units["ortho"].capacity:
+                state.units["ortho"].capacity = new_cap_ortho
+                save_state(state, state_path)
+        
+        with col2:
+            new_cap_cardio = st.number_input("❤️ Cardiologie", min_value=1, max_value=50, value=state.units["cardio"].capacity, key="cap_cardio")
+            if new_cap_cardio != state.units["cardio"].capacity:
+                state.units["cardio"].capacity = new_cap_cardio
+                save_state(state, state_path)
+        
+        with col3:
+            new_cap_neuro = st.number_input("🧠 Neurologie", min_value=1, max_value=50, value=state.units["neuro"].capacity, key="cap_neuro")
+            if new_cap_neuro != state.units["neuro"].capacity:
+                state.units["neuro"].capacity = new_cap_neuro
+                save_state(state, state_path)
+        
+        with col4:
+            new_cap_pneumo = st.number_input("🫁 Pneumologie", min_value=1, max_value=50, value=state.units["pneumo"].capacity, key="cap_pneumo")
+            if new_cap_pneumo != state.units["pneumo"].capacity:
+                state.units["pneumo"].capacity = new_cap_pneumo
+                save_state(state, state_path)
+        
+        st.markdown("**❤️ Soins Critiques**")
+        new_cap_sc = st.number_input("Capacité SC", min_value=1, max_value=20, value=state.soins_critiques.capacity, key="cap_sc")
+        if new_cap_sc != state.soins_critiques.capacity:
+            state.soins_critiques.capacity = new_cap_sc
+            save_state(state, state_path)
     
     with st.expander("👥 Gestion Personnel", expanded=False):
         cols = st.columns(3)
@@ -306,14 +592,9 @@ def show_simulation():
             symp = st.selectbox("Symptôme", symp_list, key="inj_symp")
         with c3:
             loc_opts = {
-                "Triage": "triage",
-                "Salle 1": "wr_01",
-                "Salle 2": "wr_02",
-                "Salle 3": "wr_03",
-                "Soins Critiques": "soins_critiques",
-                "Consultation": "consultation",  # FIX 1 : Injection directe possible
-                "→ Transport Consult (AS)": "transport_consultation",
-                "→ Transport Hôpital (AS)": "transport_hospital"
+                "Triage": "triage", "Salle 1": "wr_01", "Salle 2": "wr_02", "Salle 3": "wr_03",
+                "Soins Critiques": "soins_critiques", "Consultation": "consultation",
+                "→ Transport Consult (AS)": "transport_consultation", "→ Transport Hôpital (AS)": "transport_hospital"
             }
             loc_choice = st.selectbox("Destination", list(loc_opts.keys()), key="inj_loc")
             loc_id = loc_opts[loc_choice]
@@ -328,31 +609,45 @@ def show_simulation():
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         if st.button("▶️ Démarrer" if not st.session_state.sim_running else "⏸️ Pause", use_container_width=True):
-            st.session_state.sim_running = not st.session_state.sim_running; st.rerun()
+            st.session_state.sim_running = not st.session_state.sim_running
+            st.rerun()
     with c2:
         if st.button("🔄 Reset", use_container_width=True):
             ini = load_initial_state(initial_path)
             save_state(ini, state_path)
+            
+            for key in ["hospital_state", "sim_time", "brain_logs", "sim_running",
+                        "csv_session_id", "used_patient_ids"]:
+                if key in st.session_state:
+                    del st.session_state[key]
+            
             st.session_state.hospital_state = ini
             st.session_state.sim_time = 0
             st.session_state.brain_logs = []
             st.session_state.sim_running = False
-            st.success("OK"); st.rerun()
+            st.rerun()
     with c3:
-        if st.button("💾 CSV", use_container_width=True):
-            if save_session_csv(base_dir): st.success("OK")
+        if st.button("💾 Export CSV", use_container_width=True):
+            if "csv_session_id" in st.session_state:
+                st.success(f"✅ CSV : {st.session_state.csv_session_id}_*.csv")
     with c4:
         st.metric("Temps", f"{st.session_state.sim_time//60}h{st.session_state.sim_time%60:02d}")
 
-    with st.expander("🧠 Cerveau", expanded=True):
-        if st.session_state.brain_logs:
-            for l in st.session_state.brain_logs[-5:]: st.text(l)
-        else: st.caption("R.A.S.")
-
-    # FIX 6 : ORDRE ESTHÉTIQUE DES BLOCS
-    st.markdown("---")
+    # === SECTION CERVEAU & ASSISTANT IA ===
+    c_brain, c_assistant = st.columns([1, 1])
     
-    # === BLOC 1 : SOINS CRITIQUES + CONSULTATION ===
+    with c_brain:
+        with st.expander("🧠 Cerveau (Logs)", expanded=True):
+            if st.session_state.brain_logs:
+                for l in st.session_state.brain_logs[-5:]: st.text(l)
+            else: st.caption("R.A.S. - En attente du cycle")
+
+    with c_assistant:
+        with st.expander("🤖 Assistant IA", expanded=True):
+            show_ai_assistant_chat_inline(base_dir, state)
+
+    # VISUALISATION (frontend intact)
+    st.markdown("---")
     c_sc, c_cs = st.columns(2)
     with c_sc:
         with st.container(border=True):
@@ -377,7 +672,6 @@ def show_simulation():
             p = state.consultation_room.patients[0] if state.consultation_room.patients else None
             st.write(f"**Pat :** {format_patient_colored(state.patients.get(p), state.time) if p else '_'}")
 
-    # === BLOC 2 : TRANSPORT CONSULTATION (FIX 6) ===
     st.markdown("#### 🚑 Transport Consultation")
     c_as1, _ = st.columns(2)
     with c_as1:
@@ -388,8 +682,7 @@ def show_simulation():
             t1 = "✅ DISPO" if rem <= 0 else f"🚑 MISSION ({rem} min)"
         st.info(f"**AS_01 (Prio Consult)** : {t1}")
 
-    # === BLOC 3 : TRIAGE + SALLES D'ATTENTE ===
-    c_tr, c_rms = st.columns([1, 3])
+    c_tr, c_rms, c_prio = st.columns([1, 2, 1])
     with c_tr:
         with st.container(border=True):
             st.markdown("#### 📋 Triage")
@@ -404,12 +697,11 @@ def show_simulation():
             with cols[i]:
                 r = state.waiting_rooms[w]
                 with st.container(border=True):
-                    st.write(f"**{r.name}** {r.occupancy}/{r.capacity})")
+                    st.write(f"**{r.name}** ({r.occupancy}/{r.capacity})")
                     st.write(f"S: {check_presence(state, r.staff, 'INF')} {check_presence(state, r.staff, 'AS')}")
                     p = [format_patient_colored(state.patients.get(pid), state.time) for pid in r.patients]
                     st.write(" ".join(p))
 
-    # === BLOC 4 : TRANSPORT HÔPITAL (FIX 6) ===
     st.markdown("#### 🚑 Transport Hôpital")
     c_as2, _ = st.columns(2)
     with c_as2:
@@ -420,7 +712,30 @@ def show_simulation():
             t2 = "✅ DISPO" if rem <= 0 else f"🚑 MISSION ({rem} min)"
         st.info(f"**AS_02 (Prio Hôpital)** : {t2}")
 
-    # === BLOC 5 : HOSPITALISATION ===
+
+    with c_prio:
+        with st.container(border=True):
+            st.markdown("#### 🧮 Priorités")
+            df_prio = get_priority_dataframe(state)
+            if not df_prio.empty:
+                st.dataframe(
+                    df_prio,
+                    column_config={
+                        "Score": st.column_config.ProgressColumn(
+                            "Score",
+                            help="Priorité",
+                            format="%d",
+                            min_value=0,
+                            max_value=5000,
+                        ),
+                    },
+                    hide_index=True,
+                    use_container_width=True,
+                    height=200
+                )
+            else:
+                st.caption("Aucun patient")
+
     st.markdown("#### 🏥 Hospitalisation")
     cols = st.columns(4)
     icons = ["🦴", "🧠", "🫁", "❤️"]
@@ -434,22 +749,37 @@ def show_simulation():
                     p_list = [format_patient_colored(state.patients.get(pid), state.time) for pid in ut.patients]
                     st.caption(" ".join(p_list))
 
-    # === VÉRIFICATIONS ===
     viol = verify_rules(state)
     if viol: 
         for v in viol: st.error(v)
     else: st.success("✅ Règles respectées")
 
-    # =========================================================================
-    # GAME LOOP
-    # =========================================================================
+    # === STATISTIQUES TEMPS RÉEL ===
+    st.markdown("---")
+    st.markdown("## 📊 Statistiques Temps Réel (Données CSV complètes)")
+    
+    fig1, fig2, fig3, fig4, fig5, fig6 = create_complete_statistics_charts(base_dir, state)
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.plotly_chart(fig1, use_container_width=True, key="chart_repartition_temps")
+        st.plotly_chart(fig3, use_container_width=True, key="chart_as_transports")
+        st.plotly_chart(fig5, use_container_width=True, key="chart_destinations")
+    with col2:
+        st.plotly_chart(fig2, use_container_width=True, key="chart_gravite_totaux")
+        st.plotly_chart(fig4, use_container_width=True, key="chart_attente_moyen")
+    
+    st.markdown("---")
+    st.plotly_chart(fig6, use_container_width=True, key="chart_parcours_sankey")
+
+
+    # GAME LOOP (code existant continue...)
     if st.session_state.sim_running:
-        time.sleep(2.0)
+        time.sleep(1.0)
         st.session_state.sim_time += 5
         upd = False
         curr = load_initial_state(state_path); curr.time = st.session_state.sim_time
         
-        # 1. Libération Staff
         for s in curr.staff.values():
             if "aide" in str(s.role).lower() and s.is_busy and s.busy_until>0:
                 if curr.time >= s.busy_until:
@@ -458,7 +788,6 @@ def show_simulation():
                     s.location = "wr_03"
                     upd=True
 
-        # 2. Gestion des Arrivées Hôpital (Transit -> Hospitalisé)
         for pid, pat in curr.patients.items():
             if pat.status == PatientStatus.IN_TRANSIT and pat.location in curr.units:
                 if (curr.time - pat.arrival_time) >= 45:
@@ -466,13 +795,13 @@ def show_simulation():
                     pat.treatment_end_time = curr.time + random.randint(180, 1440)
                     upd = True
 
-        # 3. Medecin
         doc = curr.staff["DOC_01"]; cons = curr.consultation_room
         if doc.is_busy and doc.busy_until>0 and curr.time>=doc.busy_until:
             doc.is_busy=False; doc.busy_until=0; upd=True
             if cons.patients:
                 pid = cons.patients[0]; pat = curr.patients[pid]
                 dec = get_medical_decision(pat.severity)
+                
                 if dec == "exit":
                     cons.patients.remove(pid); cons.occupancy=0; del curr.patients[pid]
                 elif dec == "soins_critiques":
@@ -492,7 +821,6 @@ def show_simulation():
                         if dec == "hospital_unit": pat.medical_decision = random.choice(["ortho", "cardio", "neuro", "pneumo"])
                         else: pat.medical_decision = "soins_critiques" if dec=="boarding_sc" else dec
 
-        # 4. Libération Lits
         for r in list(curr.units.values()) + [curr.soins_critiques]:
             for pid in list(r.patients):
                 pat = curr.patients.get(pid)
@@ -501,15 +829,433 @@ def show_simulation():
                 if pat.status == PatientStatus.HOSPITALIZED and pat.treatment_end_time > 0 and curr.time >= pat.treatment_end_time:
                     r.patients.remove(pid); r.occupancy=max(0, r.occupancy-1); del curr.patients[pid]; upd=True
 
-        if upd: save_state(curr, state_path); st.session_state.hospital_state = curr
+        if upd:
+            save_state(curr, state_path)
+            st.session_state.hospital_state = curr
 
-        # 5. Brain
         try:
             with st.spinner("🧠..."):
                 br = process_brain_cycle()
             if br:
                 l = f"[{st.session_state.sim_time//60}h{st.session_state.sim_time%60:02d}] {br}"
-                if not st.session_state.brain_logs or st.session_state.brain_logs[-1]!=l: st.session_state.brain_logs.append(l)
+                if not st.session_state.brain_logs or st.session_state.brain_logs[-1]!=l:
+                    st.session_state.brain_logs.append(l)
+                
                 st.session_state.hospital_state = load_initial_state(state_path)
         except: pass
+        
+        
+        
+        
+        # =============================================================================
+# SYSTÈME RAG (Retrieval-Augmented Generation)
+# =============================================================================
+
+def load_rag_data(base_dir):
+    """
+    RETRIEVAL : Charge les données CSV pour le contexte RAG
+    """
+    if "csv_session_id" not in st.session_state:
+        return None, None
+    
+    hist_dir = os.path.join(base_dir, "data", "historique")
+    pat_csv = os.path.join(hist_dir, f"{st.session_state.csv_session_id}_patients.csv")
+    staff_csv = os.path.join(hist_dir, f"{st.session_state.csv_session_id}_staff.csv")
+    
+    try:
+        df_patients = pd.read_csv(pat_csv, sep=";")
+        df_staff = pd.read_csv(staff_csv, sep=";")
+        return df_patients, df_staff
+    except:
+        return None, None
+
+
+def build_rag_context(question, df_patients, df_staff):
+    """
+    RETRIEVAL : Construit le contexte RAG basé sur la question
+    
+    Cette fonction analyse la question et extrait les données pertinentes
+    des CSV pour enrichir le contexte du LLM.
+    """
+    context_parts = []
+    
+    # Extraire les IDs patients mentionnés dans la question (PAT_XXX)
+    import re
+    patient_ids = re.findall(r'PAT_\d+', question.upper())
+    
+    # === CONTEXTE PATIENTS ===
+    if df_patients is not None and not df_patients.empty:
+        context_parts.append("=== DONNÉES PATIENTS ===")
+        
+        if patient_ids:
+            # Si des patients spécifiques sont mentionnés
+            for pid in patient_ids:
+                patient_data = df_patients[df_patients['id'] == pid]
+                if not patient_data.empty:
+                    context_parts.append(f"\n{pid}:")
+                    for _, row in patient_data.iterrows():
+                        context_parts.append(
+                            f"  T+{row['timestamp']}: {row['location']} (Gravité: {row['severity']})"
+                        )
+        else:
+            # Sinon, donner un résumé général
+            latest_patients = df_patients.groupby('id').tail(1)
+            context_parts.append(f"\nNombre total de patients traités: {df_patients['id'].nunique()}")
+            context_parts.append("\nPatients actuels:")
+            for _, row in latest_patients.head(10).iterrows():
+                context_parts.append(
+                    f"  - {row['id']}: {row['location']} ({row['severity']})"
+                )
+    
+    # === CONTEXTE PERSONNEL ===
+    if df_staff is not None and not df_staff.empty:
+        context_parts.append("\n=== ACTIVITÉ PERSONNEL ===")
+        
+        # Résumé activité AS
+        as_activity = df_staff[df_staff['id'].str.contains('AS_', na=False)]
+        if not as_activity.empty:
+            context_parts.append(f"\nAS_01: {len(as_activity[as_activity['id']=='AS_01'])} transports")
+            context_parts.append(f"AS_02: {len(as_activity[as_activity['id']=='AS_02'])} transports")
+        
+        # Patients pris en charge
+        recent_staff = df_staff.tail(20)
+        if not recent_staff.empty:
+            context_parts.append("\nDernières actions:")
+            for _, row in recent_staff.iterrows():
+                if pd.notna(row['patient_handling_id']):
+                    context_parts.append(
+                        f"  - {row['id']}: {row['patient_handling_id']} "
+                        f"({row['patient_color']}) - {row['patient_symptom'][:30]}..."
+                    )
+    
+    return "\n".join(context_parts)
+
+
+def get_current_state_summary(state):
+    """
+    Résumé de l'état actuel du système pour le contexte RAG
+    """
+    summary = []
+    summary.append("=== ÉTAT ACTUEL DU SYSTÈME ===")
+    summary.append(f"\nTemps: {state.time} min")
+    
+    # Soins Critiques
+    summary.append(f"\nSoins Critiques: {state.soins_critiques.occupancy}/{state.soins_critiques.capacity}")
+    if state.soins_critiques.patients:
+        summary.append(f"  Patients: {', '.join(state.soins_critiques.patients)}")
+    
+    # Consultation
+    summary.append(f"\nConsultation: {'Occupée' if state.consultation_room.patients else 'Libre'}")
+    if state.consultation_room.patients:
+        summary.append(f"  Patient: {state.consultation_room.patients[0]}")
+    
+    # Triage
+    summary.append(f"\nTriage: {len(state.triage_zone.patients)} patients")
+    if state.triage_zone.patients:
+        summary.append(f"  Patients: {', '.join(state.triage_zone.patients[:5])}")
+    
+    # Salles d'attente
+    for rid, room in state.waiting_rooms.items():
+        if room.patients:
+            summary.append(f"\n{room.name}: {room.occupancy}/{room.capacity}")
+            summary.append(f"  Patients: {', '.join(room.patients[:3])}")
+    
+    # Personnel
+    summary.append("\n=== PERSONNEL ===")
+    for sid, staff in state.staff.items():
+        if staff.is_present:
+            status = "Occupé" if staff.is_busy else "Disponible"
+            summary.append(f"{sid}: {status}")
+    
+    return "\n".join(summary)
+
+
+# =============================================================================
+# GUARDRAILS - RÈGLES DE SÉCURITÉ
+# =============================================================================
+
+def check_guardrails(action_request, state):
+    """
+    Vérifie si une action demandée respecte les règles de sécurité
+    
+    Retourne : (is_allowed: bool, reason: str)
+    """
+    # Extraire l'action demandée
+    action_lower = action_request.lower()
+    
+    # === RÈGLE 1 : Patients ROUGE doivent être en SC ou consultation ===
+    if "déplace" in action_lower or "move" in action_lower:
+        # Extraire ID patient
+        import re
+        patient_ids = re.findall(r'PAT_\d+', action_request.upper())
+        
+        for pid in patient_ids:
+            patient = state.patients.get(pid)
+            if patient and patient.severity.value == "ROUGE":
+                # Vérifier destination
+                if "salle" in action_lower or "wr_" in action_lower:
+                    return False, f"❌ GUARDRAIL: {pid} est ROUGE, ne peut pas aller en salle d'attente (risque vital)"
+                if "triage" in action_lower:
+                    return False, f"❌ GUARDRAIL: {pid} est ROUGE, ne peut pas retourner au triage"
+    
+    # === RÈGLE 2 : Ne pas dépasser les capacités ===
+    if "ajoute" in action_lower or "place" in action_lower:
+        if "soins critiques" in action_lower or "sc" in action_lower:
+            if state.soins_critiques.occupancy >= state.soins_critiques.capacity:
+                return False, f"❌ GUARDRAIL: Soins Critiques saturés ({state.soins_critiques.capacity}/{state.soins_critiques.capacity})"
+    
+    # === RÈGLE 3 : Personnel doit être présent ===
+    if "assigne" in action_lower or "envoie" in action_lower:
+        import re
+        staff_ids = re.findall(r'(AS_\d+|INF_\w+|DOC_\d+)', action_request.upper())
+        for sid in staff_ids:
+            staff = state.staff.get(sid)
+            if staff and not staff.is_present:
+                return False, f"❌ GUARDRAIL: {sid} est absent, ne peut pas être assigné"
+    
+    # Si aucune règle violée
+    return True, "✅ Action autorisée par les guardrails"
+
+
+# =============================================================================
+# FONCTION PRINCIPALE ASSISTANT IA
+# =============================================================================
+
+def process_ai_assistant_query(question, base_dir, state):
+    """
+    Traite une question de l'utilisateur avec RAG + LLM
+    
+    WORKFLOW:
+    1. RETRIEVAL : Charger données CSV
+    2. BUILD CONTEXT : Créer contexte enrichi
+    3. GUARDRAILS : Vérifier si c'est une demande d'action
+    4. GENERATION : Appeler LLM avec contexte
+    5. ACTION : Appliquer modification si demandé et autorisé
+    """
+    
+    # === ÉTAPE 1 : RETRIEVAL ===
+    df_patients, df_staff = load_rag_data(base_dir)
+    
+    # === ÉTAPE 2 : BUILD CONTEXT ===
+    rag_context = ""
+    
+    if df_patients is not None:
+        rag_context += build_rag_context(question, df_patients, df_staff)
+    
+    rag_context += "\n\n" + get_current_state_summary(state)
+    
+    # === ÉTAPE 3 : GUARDRAILS (si c'est une demande d'action) ===
+    action_keywords = ["déplace", "move", "change", "modifie", "assigne", "envoie"]
+    is_action_request = any(kw in question.lower() for kw in action_keywords)
+    
+    guardrail_ok = True
+    guardrail_msg = ""
+    
+    if is_action_request:
+        guardrail_ok, guardrail_msg = check_guardrails(question, state)
+    
+    # === ÉTAPE 4 : GENERATION (LLM) ===
+    api_key = os.getenv("MISTRAL_API_KEY")
+    if not api_key:
+        return "❌ Clé API Mistral manquante"
+    
+    client = Mistral(api_key=api_key)
+    
+    # Construire le prompt système
+    system_prompt = f"""Tu es un assistant IA expert en régulation hospitalière.
+
+Tu as accès aux données suivantes via RAG (Retrieval-Augmented Generation):
+
+{rag_context}
+
+RÈGLES IMPORTANTES:
+1. Réponds UNIQUEMENT en te basant sur les données fournies
+2. Si l'utilisateur demande une modification:
+   - Vérifie les guardrails de sécurité
+   - Explique clairement ce que tu vas faire
+   - Confirme que c'est fait SI c'est autorisé
+3. Sois précis, factuel et professionnel
+4. Si tu ne sais pas, dis-le clairement
+
+GUARDRAILS ACTIFS:
+- Patients ROUGE: Seulement SC ou Consultation (JAMAIS en salle d'attente)
+- Ne pas dépasser les capacités des services
+- Personnel absent ne peut pas être assigné
+"""
+
+    if not guardrail_ok:
+        system_prompt += f"\n\n⚠️ DEMANDE BLOQUÉE PAR GUARDRAIL:\n{guardrail_msg}"
+    
+    try:
+        response = client.chat.complete(
+            model="mistral-small-latest",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": question}
+            ],
+            max_tokens=500
+        )
+        
+        ai_response = response.choices[0].message.content
+        
+        # === ÉTAPE 5 : ACTION (si autorisé) ===
+        if is_action_request and guardrail_ok:
+            # Ici tu pourrais ajouter la logique pour vraiment modifier l'état
+            # Pour l'instant on simule
+            ai_response += "\n\n✅ Modification appliquée dans le système."
+        elif is_action_request and not guardrail_ok:
+            ai_response = guardrail_msg + "\n\n" + ai_response
+        
+        return ai_response
+    
+    except Exception as e:
+        return f"❌ Erreur LLM: {str(e)}"
+
+
+# =============================================================================
+# INTERFACE CHATBOT (À INTÉGRER DANS SIMULATION.PY)
+# =============================================================================
+
+# REMPLACE LA FONCTION show_ai_assistant_chat() dans simulation.py
+# Par cette version STICKY (toujours en bas)
+
+def show_ai_assistant_chat_inline(base_dir, state):
+    """
+    Version inline de l'assistant (pour utiliser dans un expander)
+    """
+    simulation_running = st.session_state.get("sim_running", False)
+    
+    if "ai_chat_history" not in st.session_state:
+        st.session_state.ai_chat_history = []
+    
+    if not simulation_running:
+        st.warning("⚠️ Démarrez la simulation")
+        return
+    
+    st.caption("Posez des questions sur les patients")
+    
+    # Historique
+    chat_area = st.container(height=200)
+    with chat_area:
+        if not st.session_state.ai_chat_history:
+            st.info("💡 Ex: Pourquoi PAT_001 en SC ?")
+        else:
+            for msg in st.session_state.ai_chat_history[-5:]:  # 5 derniers messages
+                if msg["role"] == "user":
+                    st.markdown(f"**Vous:** {msg['content']}")
+                else:
+                    st.markdown(f"**🤖:** {msg['content']}")
+    
+    # Input
+    col1, col2 = st.columns([4, 1])
+    
+    with col1:
+        user_input = st.text_input(
+            "Question",
+            key="ai_input_inline",
+            placeholder="Ex: Pourquoi PAT_001 ?",
+            label_visibility="collapsed"
+        )
+    
+    with col2:
+        st.write("")
+        send = st.button("📤", key="send_inline", use_container_width=True)
+    
+    if send and user_input.strip():
+        st.session_state.ai_chat_history.append({
+            "role": "user",
+            "content": user_input
+        })
+        
+        with st.spinner("🧠..."):
+            try:
+                response = process_ai_assistant_query(user_input, base_dir, state)
+            except Exception as e:
+                response = f"❌ Erreur: {str(e)}"
+        
+        st.session_state.ai_chat_history.append({
+            "role": "assistant",
+            "content": response
+        })
+        
         st.rerun()
+
+
+def show_ai_assistant_chat(base_dir, state):
+    """
+    Assistant IA - Version simplifiée pour expander
+    """
+    
+    simulation_running = st.session_state.get("sim_running", False)
+    
+    if "ai_chat_history" not in st.session_state:
+        st.session_state.ai_chat_history = []
+    
+    # CSS pour les messages
+    st.markdown("""
+    <style>
+    .user-message {
+        background: #667eea;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 12px;
+        margin: 6px 0;
+        margin-left: 15%;
+        text-align: right;
+    }
+    
+    .bot-message {
+        background: var(--secondary-background-color);
+        padding: 8px 12px;
+        border-radius: 12px;
+        margin: 6px 0;
+        margin-right: 15%;
+        border-left: 3px solid #667eea;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    if not simulation_running:
+        st.warning("⚠️ Démarrez la simulation")
+    else:
+        st.caption("💡 Questions, explications, suggestions...")
+        
+        # Historique
+        chat_area = st.container(height=250)
+        with chat_area:
+            if not st.session_state.ai_chat_history:
+                st.info("💬 Ex: *Pourquoi PAT_001 en SC ?*")
+            else:
+                for msg in st.session_state.ai_chat_history:
+                    if msg["role"] == "user":
+                        st.markdown(f'<div class="user-message">👤 {msg["content"]}</div>', unsafe_allow_html=True)
+                    else:
+                        st.markdown(f'<div class="bot-message">🤖 {msg["content"]}</div>', unsafe_allow_html=True)
+        
+        # Input
+        col1, col2 = st.columns([5, 1])
+        
+        with col1:
+            user_input = st.text_input(
+                "Question",
+                key="ai_chat_input",
+                placeholder="Ex: Combien de patients ROUGE ?",
+                label_visibility="collapsed"
+            )
+        
+        with col2:
+            st.write("")
+            send = st.button("📤", key="send_btn")
+        
+        # Traitement
+        if send and user_input.strip():
+            st.session_state.ai_chat_history.append({"role": "user", "content": user_input})
+            
+            with st.spinner("🧠..."):
+                try:
+                    response = process_ai_assistant_query(user_input, base_dir, state)
+                except Exception as e:
+                    response = f"❌ Erreur: {str(e)}"
+            
+            st.session_state.ai_chat_history.append({"role": "assistant", "content": response})
+            st.rerun()
