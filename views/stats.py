@@ -48,7 +48,7 @@ COLORS = {
 }
 
 # =============================================================================
-# FONCTIONS DE CHARGEMENT DES DONNÉES (CORRIGÉE)
+# FONCTIONS DE CHARGEMENT DES DONNÉES
 # =============================================================================
 
 @st.cache_data(ttl=60)
@@ -895,3 +895,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
