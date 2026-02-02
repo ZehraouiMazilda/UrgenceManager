@@ -193,7 +193,47 @@ Elle permet de lancer des simulations, d'observer l'évolution du système en te
 
 ⚠️ L’application est fournie à des fins de démonstration et peut être sujette à des interruptions.
 
+### Aperçu visuel de l’application
 
+#### Page d’accueil
+
+<p align="center">
+  <img src="doc/assets/homepage1.png" alt="Homepage Urgence Manager" width="500"/>
+</p>
+
+---
+
+#### Simulation en temps réel
+
+<p align="center">
+  <img src="doc/assets/simulation1.png" alt="Simulation - vue 1" width="450"/>
+  <br/>
+  <img src="doc/assets/simulation2.png" alt="Simulation - vue 2" width="450"/>
+  <br/>
+  <img src="doc/assets/simulation3.png" alt="Simulation - vue 3" width="450"/>
+  <br/>
+  <img src="doc/assets/simulation4.png" alt="Simulation - vue 4" width="450"/>
+</p>
+
+---
+
+#### Dashboard & supervision
+
+<p align="center">
+  <img src="doc/assets/dashoard1.png" alt="Dashboard – KPIs" width="450"/>
+  <br/>
+  <img src="doc/assets/dashboard2.png" alt="Dashboard – supervision" width="450"/>
+  br/>
+  <img src="doc/assets/dashboard3.png" alt="Dashboard – supervision" width="450"/>
+</p>
+
+---
+
+#### À propos – Sous le capot
+
+<p align="center">
+  <img src="doc/assets/about.png" alt="Architecture et principes internes" width="500"/>
+</p>
 ---
 
 ## Métriques & Supervision
