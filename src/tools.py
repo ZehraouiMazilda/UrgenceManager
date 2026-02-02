@@ -362,7 +362,7 @@ def transfer_patient_with_escort(patient_id: str, target_room_id: str) -> str:
     as_agent.return_transport_code = return_code
 
     # --- NETTOYAGE TOTAL (ANTI-DOUBLON) ---
-    # On scanne TOUTES les salles (y compris Triage maintenant) et on supprime le patient
+    # On scanne TOUTES les salles et on supprime le patient
     for r_name, room_obj in all_rooms.items():
         if patient_id in room_obj.patients:
             room_obj.patients.remove(patient_id)
@@ -433,7 +433,7 @@ def get_patient_list(loc: str) -> str:
     pats: List[Patient] = [p for p in state.patients.values() if p.location == loc]
     if not pats: return "Aucun."
     
-    # Tri intelligent : Rouge > Timeout > Jaune > Vert > Gris
+    # Tri intelligent : Rouge > Jaune > Vert > Gris
     def sort_key(p: Patient) -> int:
         sev: str = p.severity.value
         wait: int = state.time - p.arrival_time
@@ -464,4 +464,5 @@ def get_patient_list(loc: str) -> str:
         
         lines.append(f"- {p.id} ({sev}) {tag}")
         
+
     return "\n".join(lines)
