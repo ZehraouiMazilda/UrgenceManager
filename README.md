@@ -7,7 +7,7 @@
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
 [![LLM](https://img.shields.io/badge/LLM-RAG%20%7C%20Agent%20(encadr%C3%A9)-purple.svg)]()
 [![Santé](https://img.shields.io/badge/Application-Urgences%20hospitalières-red.svg)]()
-[![License](https://img.shields.io/badge/License-Académique-lightgrey.svg)]()
+[![Licence](https://img.shields.io/badge/License-Académique-lightgrey.svg)]()
 
 *Projet de Master 2 SISE – Data Science*  
 *Université Lumière Lyon 2 | Année 2025–2026*
