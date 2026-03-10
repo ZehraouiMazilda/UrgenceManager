@@ -269,7 +269,7 @@ Chaque scénario :
 
 ---
 
-## 10. Moteur MCP (`hospital_server.py`)
+## 10. Moteur (`hospital_server.py`)
 
 Expose l'hôpital comme un **serveur d'outils** :
 
@@ -281,7 +281,7 @@ Expose l'hôpital comme un **serveur d'outils** :
 ➡️ Séparation claire :
 
 - **LLM décide**
-- **MCP exécute**
+- **Agent exécute**
 
 ---
 
