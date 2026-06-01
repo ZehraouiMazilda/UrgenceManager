@@ -17,7 +17,7 @@ from src.models import Patient, Severity, PatientStatus, StateFile
 from src.utils import load_initial_state, save_state
 from src.logger import log_event
 from src.ai_brain import process_brain_cycle
-from mistralai import Mistral
+from mistralai.client import Mistral
 
 # =============================================================================
 # CHARGEMENT
