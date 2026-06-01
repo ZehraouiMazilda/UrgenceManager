@@ -5,7 +5,7 @@ import re
 import time  
 from typing import Optional, Dict, List, Any
 from dotenv import load_dotenv
-from mistralai import Mistral
+from mistralai.client import Mistral
 from src.tools import (
     get_hospital_dashboard, 
     get_patient_list, 
